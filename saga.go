@@ -10,3 +10,7 @@ type Saga interface {
 	OnSagaCompletedSuccessfully(sagaID string, data proto.Message)
 	OnSagaRolledBack(sagaID string, data proto.Message)
 }
+
+func Step() *StepBuilder {
+	return NewStepBuilder(NewSagaDefinitionBuilder())
+}
