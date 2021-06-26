@@ -9,8 +9,24 @@ import (
 )
 
 type SagaManager interface {
-	Create(data interface{}) *SagaInstance
+	Create(data proto.Message) (*SagaInstance, error)
 	SubscribeToReplyChannel()
+}
+
+func NewSagaManager(
+	saga Saga,
+	sagaInstanceRepository SagaInstanceRepository,
+	commandProducer commands.CommandProducer,
+	messageConsumer messaging.MessageConsumer,
+	sagaCommandProducer SagaCommandProducer,
+) SagaManager {
+	return &sagaManager{
+		saga:                   saga,
+		sagaInstanceRepository: sagaInstanceRepository,
+		commandProducer:        commandProducer,
+		messageConsumer:        messageConsumer,
+		sagaCommandProducer:    sagaCommandProducer,
+	}
 }
 
 type sagaManager struct {
