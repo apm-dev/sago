@@ -6,11 +6,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const (
-	SAGA_TYPE = commands.COMMAND_HEADER_PREFIX + "saga_type"
-	SAGA_ID   = commands.COMMAND_HEADER_PREFIX + "saga_id"
-)
-
 type Command struct {
 	commands.Command
 	Name         string
