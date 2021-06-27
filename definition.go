@@ -8,7 +8,7 @@ import (
 
 type SagaDefinition interface {
 	Start(sagaData proto.Message) *SagaActions
-	HandleReply(currentState string, sagaData interface{}, message messaging.Message) *SagaActions
+	HandleReply(currentState string, sagaData []byte, message messaging.Message) *SagaActions
 }
 
 type sagaDefinition struct {
@@ -20,9 +20,11 @@ func NewSagaDefinition(stps []SagaStep) SagaDefinition {
 }
 
 func (sd *sagaDefinition) Start(sagaData proto.Message) *SagaActions {
+	// TODO implement
 	panic("implement me")
 }
 
-func (sd *sagaDefinition) HandleReply(currentState string, sagaData interface{}, message messaging.Message) *SagaActions {
+func (sd *sagaDefinition) HandleReply(currentState string, sagaData []byte, message messaging.Message) *SagaActions {
+	// TODO implement
 	panic("implement me")
 }

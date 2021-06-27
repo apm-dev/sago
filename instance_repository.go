@@ -1,7 +1,7 @@
 package sago
 
 type SagaInstanceRepository interface {
-	Save(si SagaInstance) string
-	Find(sagaType, sagaID string) *SagaInstance
-	Update(si SagaInstance)
+	Save(si SagaInstance) (string, error)
+	Find(sagaType, sagaID string) (*SagaInstance, error)
+	Update(si SagaInstance) error
 }
