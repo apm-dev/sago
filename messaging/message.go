@@ -12,18 +12,18 @@ const (
 type Message interface {
 	ID() (string, error)
 	Headers() map[string]string
-	Payload() string
+	Payload() []byte
 	Header(name string) string
 	RequiredHeader(name string) (string, error)
 	HasHeader(name string) bool
 
-	SetPayload(payload string)
+	SetPayload(payload []byte)
 	SetHeaders(headers map[string]string)
 	SetHeader(name, value string)
 	RemoveHeader(key string)
 }
 
-func NewMessage(payload string, headers map[string]string) Message {
+func NewMessage(payload []byte, headers map[string]string) Message {
 	return &message{
 		payload: payload,
 		headers: headers,
@@ -31,7 +31,7 @@ func NewMessage(payload string, headers map[string]string) Message {
 }
 
 type message struct {
-	payload string
+	payload []byte
 	headers map[string]string
 }
 
@@ -43,7 +43,7 @@ func (m *message) Headers() map[string]string {
 	return m.headers
 }
 
-func (m *message) Payload() string {
+func (m *message) Payload() []byte {
 	return m.payload
 }
 
@@ -64,7 +64,7 @@ func (m *message) HasHeader(name string) bool {
 	return ok
 }
 
-func (m *message) SetPayload(payload string) {
+func (m *message) SetPayload(payload []byte) {
 	m.payload = payload
 }
 
