@@ -1,52 +1,67 @@
 package sago
 
-type SagaExecutionState struct {
-	currentlyExecuting int
-	compensating       bool
-	endState           bool
+import "encoding/json"
+
+type sagaExecutionState struct {
+	CurrentlyExecuting int
+	Compensating       bool
+	EndState           bool
 }
 
-func NewSagaExecutionState(currentlyExecuting int, compensating bool) *SagaExecutionState {
-	return &SagaExecutionState{
-		currentlyExecuting: currentlyExecuting,
-		compensating:       compensating,
+func NewSagaExecutionState(currentlyExecuting int, compensating bool) *sagaExecutionState {
+	return &sagaExecutionState{
+		CurrentlyExecuting: currentlyExecuting,
+		Compensating:       compensating,
 	}
 }
 
-func (ses *SagaExecutionState) CurrentlyExecuting() int {
-	return ses.currentlyExecuting
+func (ses *sagaExecutionState) GetCurrentlyExecuting() int {
+	return ses.CurrentlyExecuting
 }
 
-func (ses *SagaExecutionState) SetCurrentlyExecuting(currentlyExecuting int) {
-	ses.currentlyExecuting = currentlyExecuting
+func (ses *sagaExecutionState) SetCurrentlyExecuting(currentlyExecuting int) {
+	ses.CurrentlyExecuting = currentlyExecuting
 }
 
-func (ses *SagaExecutionState) IsCompensating() bool {
-	return ses.compensating
+func (ses *sagaExecutionState) IsCompensating() bool {
+	return ses.Compensating
 }
 
-func (ses *SagaExecutionState) SetCompensating(compensating bool) {
-	ses.compensating = compensating
+func (ses *sagaExecutionState) SetCompensating(compensating bool) {
+	ses.Compensating = compensating
 }
 
-func (ses *SagaExecutionState) IsEndState() bool {
-	return ses.endState
+func (ses *sagaExecutionState) IsEndState() bool {
+	return ses.EndState
 }
 
-func (ses *SagaExecutionState) SetEndState(endState bool) {
-	ses.endState = endState
+func (ses *sagaExecutionState) SetEndState(endState bool) {
+	ses.EndState = endState
 }
 
-func (ses *SagaExecutionState) NextState(size int) *SagaExecutionState {
-	step := ses.currentlyExecuting + size
-	if ses.compensating {
-		step = ses.currentlyExecuting - size
+func (ses *sagaExecutionState) NextState(size int) *sagaExecutionState {
+	step := ses.CurrentlyExecuting + size
+	if ses.Compensating {
+		step = ses.CurrentlyExecuting - size
 	}
-	return &SagaExecutionState{currentlyExecuting: step, compensating: ses.compensating}
+	return &sagaExecutionState{CurrentlyExecuting: step, Compensating: ses.Compensating}
 }
 
-func MakeEndState() *SagaExecutionState {
-	ses := &SagaExecutionState{}
+func (ses *sagaExecutionState) StartCompensating() *sagaExecutionState {
+	return NewSagaExecutionState(ses.CurrentlyExecuting, true)
+}
+
+func MakeEndState() *sagaExecutionState {
+	ses := &sagaExecutionState{}
 	ses.SetEndState(true)
 	return ses
+}
+
+func (ses *sagaExecutionState) encode() string {
+	b, _ := json.Marshal(ses)
+	return string(b)
+}
+
+func (ses *sagaExecutionState) decode(val string) {
+	json.Unmarshal([]byte(val), ses)
 }

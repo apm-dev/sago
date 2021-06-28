@@ -8,10 +8,10 @@ import (
 )
 
 type ParticipantInvocation struct {
-	cmdProvider func() commands.Command
+	cmdProvider func() *Command
 }
 
-func NewParticipantInvocation(cmdProvider func() commands.Command) *ParticipantInvocation {
+func NewParticipantInvocation(cmdProvider func() *Command) *ParticipantInvocation {
 	return &ParticipantInvocation{cmdProvider}
 }
 
@@ -24,6 +24,6 @@ func (pi *ParticipantInvocation) isSuccessfulReply(msg messaging.Message) bool {
 	return strings.EqualFold(val, string(commands.SUCCESS))
 }
 
-func (pi *ParticipantInvocation) makeCommandToSend() commands.Command {
+func (pi *ParticipantInvocation) makeCommandToSend() *Command {
 	return pi.cmdProvider()
 }

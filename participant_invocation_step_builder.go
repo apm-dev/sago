@@ -1,36 +1,32 @@
 package sago
 
-import (
-	"apm-dev/sago/commands"
-)
-
 type ParticipantInvocationStepBuilder struct {
 	parent                    *SagaDefinitionBuilder
 	action                    *ParticipantInvocation
 	compensation              *ParticipantInvocation
-	actionReplyHandlers       map[string]func([]byte)
-	compensationReplyHandlers map[string]func([]byte)
+	actionReplyHandlers       map[string]func(data []byte, msg []byte)
+	compensationReplyHandlers map[string]func(data []byte, msg []byte)
 }
 
 func NewParticipantInvocationStepBuilder(parent *SagaDefinitionBuilder) *ParticipantInvocationStepBuilder {
 	return &ParticipantInvocationStepBuilder{
 		parent:                    parent,
-		actionReplyHandlers:       make(map[string]func([]byte)),
-		compensationReplyHandlers: make(map[string]func([]byte)),
+		actionReplyHandlers:       make(map[string]func(data []byte, msg []byte)),
+		compensationReplyHandlers: make(map[string]func(data []byte, msg []byte)),
 	}
 }
 
-func (b *ParticipantInvocationStepBuilder) WithAction(cmdProvider func() commands.Command) *ParticipantInvocationStepBuilder {
+func (b *ParticipantInvocationStepBuilder) WithAction(cmdProvider func() *Command) *ParticipantInvocationStepBuilder {
 	b.action = NewParticipantInvocation(cmdProvider)
 	return b
 }
 
-func (b *ParticipantInvocationStepBuilder) WithCompensation(cmdProvider func() commands.Command) *ParticipantInvocationStepBuilder {
+func (b *ParticipantInvocationStepBuilder) WithCompensation(cmdProvider func() *Command) *ParticipantInvocationStepBuilder {
 	b.compensation = NewParticipantInvocation(cmdProvider)
 	return b
 }
 
-func (b *ParticipantInvocationStepBuilder) OnReply(name string, handler func([]byte)) *ParticipantInvocationStepBuilder {
+func (b *ParticipantInvocationStepBuilder) OnReply(name string, handler func(data []byte, msg []byte)) *ParticipantInvocationStepBuilder {
 	if b.compensation != nil {
 		b.compensationReplyHandlers[name] = handler
 	} else {

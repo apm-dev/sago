@@ -63,12 +63,13 @@ func (sm *sagaManager) Create(data proto.Message) (*SagaInstance, error) {
 		return nil, err
 	}
 
-	actions := def.Start(data)
-
 	serData, err := proto.Marshal(data)
 	if err != nil {
 		return nil, errors.Wrap(err, "Couldn't marshal sagaData")
 	}
+
+	actions := def.Start(serData)
+
 	sm.processActions(sagaID, sagaInstance, serData, actions)
 
 	return sagaInstance, nil
@@ -124,11 +125,15 @@ func (sm *sagaManager) handleReply(msg messaging.Message) {
 		return
 	}
 
-	actions := sagaDefinition.HandleReply(
+	actions, err := sagaDefinition.HandleReply(
 		currentState,
 		sagaInstance.SerializedSagaData(),
 		msg,
 	)
+	if err != nil {
+		log.Printf("Couldn't handle reply, err: %v", err)
+		return
+	}
 
 	err = sm.processActions(
 		sagaID, sagaInstance,
@@ -137,7 +142,7 @@ func (sm *sagaManager) handleReply(msg messaging.Message) {
 	)
 
 	if err != nil {
-		log.Printf("Couldn't process actions", err)
+		log.Printf("Couldn't process actions, err: %v", err)
 		return
 	}
 }
@@ -172,12 +177,11 @@ func (sm *sagaManager) processActions(sagaID string, sagaInstance *SagaInstance,
 	sm.updateState(sagaInstance, actions)
 
 	if updatedSagaData := actions.UpdatedSagaData(); updatedSagaData != nil {
-		serd, err := serializeSagaData(updatedSagaData)
+		/* serd, err := serializeSagaData(updatedSagaData)
 		if err != nil {
-			// TODO log
 			return err
-		}
-		sagaInstance.SetSerializedSagaData(serd)
+		} */
+		sagaInstance.SetSerializedSagaData(updatedSagaData)
 	}
 
 	if actions.IsEndState() {
