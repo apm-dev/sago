@@ -8,11 +8,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/proto"
 )
 
 type SagaManager interface {
-	Create(data proto.Message) (*SagaInstance, error)
+	Create(data SagaData) (*SagaInstance, error)
 	SubscribeToReplyChannel()
 }
 
@@ -41,15 +40,17 @@ type sagaManager struct {
 	sagaCommandProducer    SagaCommandProducer
 }
 
-func (sm *sagaManager) Create(data proto.Message) (*SagaInstance, error) {
-	dataserd, err := serializeSagaData(data)
-	if err != nil {
-		return nil, err
-	}
+func (sm *sagaManager) Create(data SagaData) (*SagaInstance, error) {
+	// dataserd, err := serializeSagaData(data)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	dataSerd := data.Marshal()
 
 	sagaInstance := NewSagaInstance(
 		"", sm.getSagaType(), "????", "",
-		dataserd, map[string]string{},
+		dataSerd, map[string]string{},
 	)
 
 	sagaID, err := sm.sagaInstanceRepository.Save(*sagaInstance)
@@ -63,14 +64,14 @@ func (sm *sagaManager) Create(data proto.Message) (*SagaInstance, error) {
 		return nil, err
 	}
 
-	serData, err := proto.Marshal(data)
-	if err != nil {
-		return nil, errors.Wrap(err, "Couldn't marshal sagaData")
-	}
+	// serData, err := proto.Marshal(data)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "Couldn't marshal sagaData")
+	// }
 
-	actions := def.Start(serData)
+	actions := def.Start(dataSerd)
 
-	sm.processActions(sagaID, sagaInstance, serData, actions)
+	sm.processActions(sagaID, sagaInstance, dataSerd, actions)
 
 	return sagaInstance, nil
 }

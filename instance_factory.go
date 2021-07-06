@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/proto"
 )
 
 type SagaInstanceFactory struct {
@@ -24,7 +23,7 @@ func NewSagaInstanceFactory(smf *SagaManagerFactory, sagas []Saga) *SagaInstance
 	return &sif
 }
 
-func (sif *SagaInstanceFactory) Create(saga Saga, data proto.Message) (*SagaInstance, error) {
+func (sif *SagaInstanceFactory) Create(saga Saga, data SagaData) (*SagaInstance, error) {
 	sif.sagaManagersLock.RLock()
 	defer sif.sagaManagersLock.RUnlock()
 	sagaManager := sif.sagaManagers[saga]

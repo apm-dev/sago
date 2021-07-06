@@ -22,7 +22,7 @@ func (cp *SagaCommandProducer) sendCommands(sagaType, sagaID, sagaReplyChannel s
 		}
 		headers[SAGA_TYPE] = sagaType
 		headers[SAGA_ID] = sagaID
-		msgID = cp.cmdProducer.Send(cmd.Channel, sagaReplyChannel, cmd, headers)
+		msgID = cp.cmdProducer.Send(cmd.Channel, sagaReplyChannel, &cmd, headers)
 	}
 	return msgID
 }
