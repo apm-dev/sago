@@ -22,3 +22,4 @@ vendor/
 /src/.env
 
 /tmp
+/cmd
