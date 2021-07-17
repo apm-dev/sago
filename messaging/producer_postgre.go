@@ -2,6 +2,7 @@ package messaging
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -74,10 +75,13 @@ func (p *MessageProducerPostgreImpl) Send(destination string, msg Message) error
 		Destination: destination,
 		Headers:     msg.Headers(),
 	}
-
-	result := p.db.Create(&data)
+	tx := p.db.Begin()
+	result := tx.Create(&data)
 	if result.Error != nil {
-		errors.Wrap(result.Error, "Couldn't insert message to db")
+		tx.Rollback()
+		return errors.Wrap(result.Error, "Couldn't insert message to db")
 	}
+	msg.SetHeader(ID, strconv.FormatUint(uint64(data.ID), 10))
+	tx.Commit()
 	return nil
 }

@@ -20,7 +20,7 @@ func NewSagaManager(
 	sagaInstanceRepository SagaInstanceRepository,
 	commandProducer commands.CommandProducer,
 	messageConsumer messaging.MessageConsumer,
-	sagaCommandProducer SagaCommandProducer,
+	sagaCommandProducer *SagaCommandProducer,
 ) SagaManager {
 	return &sagaManager{
 		saga:                   saga,
@@ -37,7 +37,7 @@ type sagaManager struct {
 	sagaInstanceRepository SagaInstanceRepository
 	commandProducer        commands.CommandProducer
 	messageConsumer        messaging.MessageConsumer
-	sagaCommandProducer    SagaCommandProducer
+	sagaCommandProducer    *SagaCommandProducer
 }
 
 func (sm *sagaManager) Create(data SagaData) (*SagaInstance, error) {
@@ -120,7 +120,7 @@ func (sm *sagaManager) handleReply(msg messaging.Message) {
 	sagaDefinition, err := sm.getStateDefinition()
 	if err != nil {
 		log.Printf(
-			"Error while getting definition for saga id:%s, type:%s \n Error: %v",
+			"Error while getting definition of saga id:%s, type:%s \n Error: %v",
 			sagaID, sagaType, err,
 		)
 		return
@@ -166,12 +166,18 @@ func (sm *sagaManager) getStateDefinition() (SagaDefinition, error) {
 
 func (sm *sagaManager) processActions(sagaID string, sagaInstance *SagaInstance, sagaData []byte, actions *SagaActions) error {
 
-	lastRequestID := sm.sagaCommandProducer.sendCommands(
+	lastRequestID, err := sm.sagaCommandProducer.sendCommands(
 		sm.getSagaType(),
 		sagaID,
 		sm.makeSagaReplyChannel(),
 		actions.Commands(),
 	)
+	if err != nil {
+		return errors.Wrapf(err,
+			"failed to send command of saga %s:%s",
+			sm.getSagaType(), sagaID,
+		)
+	}
 
 	sagaInstance.SetLastRequestID(lastRequestID)
 

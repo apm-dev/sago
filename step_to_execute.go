@@ -1,5 +1,7 @@
 package sago
 
+import "apm-dev/sago/commands"
+
 type stepToExecute struct {
 	step         SagaStep
 	skipped      int
@@ -29,7 +31,7 @@ func (s *stepToExecute) executeStep(data []byte, currentState *sagaExecutionStat
 	newState := currentState.NextState(s.size())
 	cmd := s.step.Command(currentState.IsCompensating())
 	return NewSagaActions(
-		[]Command{*cmd},
+		[]commands.Command{cmd},
 		data,
 		newState.encode(),
 		newState.IsEndState(),

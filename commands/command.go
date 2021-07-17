@@ -1,6 +1,8 @@
 package commands
 
-import "apm-dev/sago/messaging"
+import (
+	"apm-dev/sago/messaging"
+)
 
 type CommandReplyOutcome string
 
@@ -12,6 +14,8 @@ const (
 type Command interface {
 	GetName() string
 	GetPayload() []byte
+	GetChannel() string
+	GetExtraHeaders() map[string]string
 }
 
 func MakeMessage(channel, replyTo string, cmd Command, headers map[string]string) messaging.Message {

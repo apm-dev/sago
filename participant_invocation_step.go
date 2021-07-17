@@ -9,15 +9,15 @@ import (
 type ParticipantInvocationStep struct {
 	participantInvocation     *ParticipantInvocation
 	compensation              *ParticipantInvocation
-	actionReplyHandlers       map[string]func(data []byte, msg []byte)
-	compensationReplyHandlers map[string]func(data []byte, msg []byte)
+	actionReplyHandlers       map[string]func(data, msg []byte)
+	compensationReplyHandlers map[string]func(data, msg []byte)
 }
 
 func NewParticipantInvocationStep(
 	participantInvocation *ParticipantInvocation,
 	compensation *ParticipantInvocation,
-	actionReplyHandlers map[string]func(data []byte, msg []byte),
-	compensationReplyHandlers map[string]func(data []byte, msg []byte),
+	actionReplyHandlers map[string]func(data, msg []byte),
+	compensationReplyHandlers map[string]func(data, msg []byte),
 ) *ParticipantInvocationStep {
 	return &ParticipantInvocationStep{
 		participantInvocation:     participantInvocation,
@@ -38,7 +38,7 @@ func (stp *ParticipantInvocationStep) IsSuccessfulReply(compensating bool, msg m
 	return stp.getParticipantInvocation(compensating).isSuccessfulReply(msg)
 }
 
-func (stp *ParticipantInvocationStep) GetReplyHandler(msg messaging.Message, compensating bool) func(data []byte, msg []byte) {
+func (stp *ParticipantInvocationStep) GetReplyHandler(msg messaging.Message, compensating bool) func(data, msg []byte) {
 	replyType, err := msg.RequiredHeader(commands.REPLY_TYPE)
 	if err != nil {
 		// TODO log
@@ -56,7 +56,7 @@ func (stp *ParticipantInvocationStep) GetReplyHandler(msg messaging.Message, com
 	return NewRemoteStepOutcome([]commands.Command{cmd})
 } */
 
-func (stp *ParticipantInvocationStep) Command(compensating bool) *Command {
+func (stp *ParticipantInvocationStep) Command(compensating bool) commands.Command {
 	return stp.getParticipantInvocation(compensating).makeCommandToSend()
 }
 

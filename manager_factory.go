@@ -9,15 +9,14 @@ type SagaManagerFactory struct {
 	sagaInstanceRepository SagaInstanceRepository
 	commandProducer        commands.CommandProducer
 	messageConsumer        messaging.MessageConsumer
-	sagaCommandProducer    SagaCommandProducer
+	sagaCommandProducer    *SagaCommandProducer
 }
 
 func NewSagaManagerFactory(
-	saga Saga,
 	sagaInstanceRepository SagaInstanceRepository,
 	commandProducer commands.CommandProducer,
 	messageConsumer messaging.MessageConsumer,
-	sagaCommandProducer SagaCommandProducer,
+	sagaCommandProducer *SagaCommandProducer,
 ) *SagaManagerFactory {
 	return &SagaManagerFactory{
 		sagaInstanceRepository: sagaInstanceRepository,
