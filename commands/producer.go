@@ -1,13 +1,42 @@
 package commands
 
-import "apm-dev/sago/messaging"
+import (
+	"apm-dev/sago/messaging"
+
+	"github.com/pkg/errors"
+)
 
 // TODO: implement
 type CommandProducer interface {
-	Send(channel, replyTo string, cmd Command, headers map[string]string) string
+	Send(channel, replyTo string, cmd Command, headers map[string]string) (string, error)
 }
 
-type CommandProducerImpl struct {
+type commandProducerImpl struct {
 	msgProducer messaging.MessageProducer
 }
 
+func NewCommandProducerImpl(mp messaging.MessageProducer) CommandProducer {
+	return &commandProducerImpl{
+		msgProducer: mp,
+	}
+}
+
+func (p *commandProducerImpl) Send(channel, replyTo string, cmd Command, headers map[string]string) (string, error) {
+	msg := MakeMessage(channel, replyTo, cmd, headers)
+	err := p.msgProducer.Send(channel, msg)
+
+	if err != nil {
+		return "", errors.Wrapf(err,
+			"Couldn't send the command: %s to %s",
+			cmd.GetName(), channel,
+		)
+	}
+	id, err := msg.ID()
+	if err != nil {
+		return "", errors.Wrapf(err,
+			"sent message doesn't have ID, cmd: %s, channel: %s",
+			cmd.GetName(), channel,
+		)
+	}
+	return id, nil
+}

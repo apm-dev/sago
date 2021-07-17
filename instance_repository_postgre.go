@@ -86,7 +86,7 @@ func (r *SagaInstanceRepositoryPostgreImpl) Save(si SagaInstance) (string, error
 		return "", errors.Wrap(result.Error, "Couldn't store sagaInstance, type:"+si.SagaType())
 	}
 
-	log.Printf("saving SagaInstance id:%s type:%s", si.ID(), si.SagaType())
+	log.Printf("saving SagaInstance id:%d type:%s", data.SagaID, si.SagaType())
 
 	return strconv.Itoa(int(data.SagaID)), nil
 }

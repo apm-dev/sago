@@ -16,13 +16,13 @@ func NewParticipantInvocationStepBuilder(parent *SagaDefinitionBuilder) *Partici
 	}
 }
 
-func (b *ParticipantInvocationStepBuilder) WithAction(cmdProvider func() *Command) *ParticipantInvocationStepBuilder {
-	b.action = NewParticipantInvocation(cmdProvider)
+func (b *ParticipantInvocationStepBuilder) WithAction(cmdEndpoint CommandEndpoint, cmdProvider func() []byte) *ParticipantInvocationStepBuilder {
+	b.action = NewParticipantInvocation(cmdEndpoint, cmdProvider)
 	return b
 }
 
-func (b *ParticipantInvocationStepBuilder) WithCompensation(cmdProvider func() *Command) *ParticipantInvocationStepBuilder {
-	b.compensation = NewParticipantInvocation(cmdProvider)
+func (b *ParticipantInvocationStepBuilder) WithCompensation(cmdEndpoint CommandEndpoint, cmdProvider func() []byte) *ParticipantInvocationStepBuilder {
+	b.compensation = NewParticipantInvocation(cmdEndpoint, cmdProvider)
 	return b
 }
 

@@ -1,22 +1,48 @@
 package sago
 
-import (
-	"apm-dev/sago/commands"
-)
-
 type Command struct {
-	commands.Command
 	Name         string
 	Channel      string
 	Payload      []byte
-	ReplyStructs []interface{}
 	ExtraHeaders map[string]string
+}
+
+func NewCommand(name, channel string, payload []byte, extHeaders map[string]string) *Command {
+	return &Command{
+		Name:         name,
+		Channel:      channel,
+		Payload:      payload,
+		ExtraHeaders: extHeaders,
+	}
+}
+
+func (c *Command) GetName() string {
+	return c.Name
 }
 
 func (c *Command) GetPayload() []byte {
 	return c.Payload
 }
 
-func (c *Command) GetName() string {
-	return c.Name
+func (c *Command) GetChannel() string {
+	return c.Channel
 }
+
+func (c *Command) GetExtraHeaders() map[string]string {
+	return c.ExtraHeaders
+}
+
+/*
+exam: coding challenge
+295 USD
+Toronto
+
+for six month:
+
+19500 USD
+
+ILETS
+
+salary:
+45000-80000
+*/

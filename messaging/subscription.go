@@ -1,5 +1,5 @@
 package messaging
 
 type MessageSubscription interface {
-	Unsubscribe()
+	Unsubscribe() error
 }

@@ -8,22 +8,29 @@ import (
 )
 
 type ParticipantInvocation struct {
-	cmdProvider func() *Command
+	cmdEndpoint CommandEndpoint
+	cmdProvider func() []byte
 }
 
-func NewParticipantInvocation(cmdProvider func() *Command) *ParticipantInvocation {
-	return &ParticipantInvocation{cmdProvider}
+func NewParticipantInvocation(cmdEndpoint CommandEndpoint, cmdProvider func() []byte) *ParticipantInvocation {
+	return &ParticipantInvocation{cmdEndpoint, cmdProvider}
 }
 
 func (pi *ParticipantInvocation) isSuccessfulReply(msg messaging.Message) bool {
 	val, err := msg.RequiredHeader(commands.REPLY_OUTCOME)
 	if err != nil {
-		log.Print(err)
+		// TODO: log
+		log.Println(err)
 		return false
 	}
 	return strings.EqualFold(val, string(commands.SUCCESS))
 }
 
-func (pi *ParticipantInvocation) makeCommandToSend() *Command {
-	return pi.cmdProvider()
+func (pi *ParticipantInvocation) makeCommandToSend() commands.Command {
+	return NewCommand(
+		pi.cmdEndpoint.CommandName(),
+		pi.cmdEndpoint.Channel(),
+		pi.cmdProvider(),
+		map[string]string{},
+	)
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type SagaInstanceFactory struct {
-	sagaManagersLock *sync.RWMutex
+	sagaManagersLock sync.RWMutex
 	sagaManagers     map[Saga]SagaManager
 }
 
