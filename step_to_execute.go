@@ -29,7 +29,7 @@ func (s *stepToExecute) isEmpty() bool {
 
 func (s *stepToExecute) executeStep(data []byte, currentState *sagaExecutionState) *SagaActions {
 	newState := currentState.NextState(s.size())
-	cmd := s.step.Command(currentState.IsCompensating())
+	cmd := s.step.Command(data)
 	return NewSagaActions(
 		[]commands.Command{cmd},
 		data,

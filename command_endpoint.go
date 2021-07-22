@@ -1,10 +1,5 @@
 package sago
 
-import (
-	"reflect"
-	"strings"
-)
-
 type CommandEndpoint struct {
 	command interface{}
 	channel string
@@ -19,8 +14,7 @@ func (c *CommandEndpoint) Command() interface{} {
 }
 
 func (c *CommandEndpoint) CommandName() string {
-	n := strings.Split(reflect.TypeOf(c.command).String(), ".")
-	return n[len(n)-1]
+	return structName(c.command)
 }
 
 func (c *CommandEndpoint) Channel() string {

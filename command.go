@@ -31,18 +31,3 @@ func (c *Command) GetChannel() string {
 func (c *Command) GetExtraHeaders() map[string]string {
 	return c.ExtraHeaders
 }
-
-/*
-exam: coding challenge
-295 USD
-Toronto
-
-for six month:
-
-19500 USD
-
-ILETS
-
-salary:
-45000-80000
-*/

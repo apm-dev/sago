@@ -15,8 +15,8 @@ var (
 )
 
 type MessageConsumerKafkaImpl struct {
-	id       string
-	consumer *kafka.Subscriber
+	id  string
+	sub *kafka.Subscriber
 }
 
 func NewMessageConsumerKafkaImpl(brokers []string) MessageConsumer {
@@ -30,30 +30,34 @@ func NewMessageConsumerKafkaImpl(brokers []string) MessageConsumer {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	return &MessageConsumerKafkaImpl{
-		id:       watermill.NewUUID(),
-		consumer: sub,
+		id:  watermill.NewUUID(),
+		sub: sub,
 	}
 }
 
 func (c *MessageConsumerKafkaImpl) Subscribe(subscriberID string, channels []string, handler func(m Message)) MessageSubscription {
 	for _, ch := range channels {
-		msgs, err := c.consumer.Subscribe(context.Background(), ch)
+		log.Println("registering subscriber for", ch)
+
+		msgs, err := c.sub.Subscribe(context.Background(), ch)
 		if err != nil {
 			panic(errors.Wrapf(err,
-				"failed to subscribe on kafka topic %s, subscriberID: %s \nerr: %s",
+				"failed to subscribe on kafka topic %s, subscriberID: %s\nerr: %v\n",
 				ch, subscriberID, err,
 			))
 		}
-		go func() {
+		go func(ch string) {
+			log.Println(ch, "subscribing started")
 			for msg := range msgs {
 				log.Printf("message received, id: %s", msg.UUID)
 				// TODO: store msg in db and detect message duplication
 				handler(NewMessage(msg.Payload, msg.Metadata))
 				msg.Ack()
 			}
-		}()
+			log.Println(ch, "subscribing closed")
+		}(ch)
 	}
 	return &KafkaSubscription{
 		close: c.Close,
@@ -65,7 +69,7 @@ func (c *MessageConsumerKafkaImpl) ID() string {
 }
 
 func (c *MessageConsumerKafkaImpl) Close() error {
-	err := c.consumer.Close()
+	err := c.sub.Close()
 	if err != nil {
 		return errors.Wrap(err, "failed to close kafka subscription")
 	}

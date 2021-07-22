@@ -3,7 +3,6 @@ package messaging
 import (
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/pkg/errors"
 	"gorm.io/driver/postgres"
@@ -67,8 +66,7 @@ func NewMessageProducerPostgreImpl(conf PostgreConfig) *MessageProducerPostgreIm
 
 func (p *MessageProducerPostgreImpl) Send(destination string, msg Message) error {
 	// prepare message headers
-	msg.SetHeader(DESTINATION, destination)
-	msg.SetHeader(DATE, time.Now().UTC().Format(time.RFC1123))
+	prepareMessageHeaders(msg, destination)
 
 	data := postgreSchema{
 		Payload:     msg.Payload(),

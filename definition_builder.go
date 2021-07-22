@@ -1,17 +1,24 @@
 package sago
 
+import "sync"
+
 type SagaDefinitionBuilder struct {
-	sagaSteps []SagaStep
+	sync.RWMutex
+	sagaSteps map[string]SagaStep
 }
 
 func NewSagaDefinitionBuilder() *SagaDefinitionBuilder {
-	return &SagaDefinitionBuilder{sagaSteps: make([]SagaStep, 0)}
+	return &SagaDefinitionBuilder{sagaSteps: make(map[string]SagaStep)}
 }
 
-func (sdb *SagaDefinitionBuilder) AddStep(step SagaStep) {
-	sdb.sagaSteps = append(sdb.sagaSteps, step)
+func (b *SagaDefinitionBuilder) AddStep(name string, step SagaStep) {
+	b.Lock()
+	defer b.Unlock()
+	b.sagaSteps[name] = step
 }
 
-func (sdb *SagaDefinitionBuilder) Build() SagaDefinition {
-	return NewSagaDefinition(sdb.sagaSteps)
+func (b *SagaDefinitionBuilder) Build() SagaDefinition {
+	b.RLock()
+	defer b.RUnlock()
+	return NewSagaDefinition(b.sagaSteps)
 }
