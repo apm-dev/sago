@@ -1,37 +1,25 @@
 package sago
 
 type ParticipantInvocationStepBuilder struct {
-	parent                    *SagaDefinitionBuilder
-	action                    *ParticipantInvocation
-	compensation              *ParticipantInvocation
-	actionReplyHandlers       map[string]func(data []byte, msg []byte)
-	compensationReplyHandlers map[string]func(data []byte, msg []byte)
+	parent              *SagaDefinitionBuilder
+	action              *ParticipantInvocation
+	actionReplyHandlers map[string]func(data, msg []byte) SagaData
 }
 
 func NewParticipantInvocationStepBuilder(parent *SagaDefinitionBuilder) *ParticipantInvocationStepBuilder {
 	return &ParticipantInvocationStepBuilder{
-		parent:                    parent,
-		actionReplyHandlers:       make(map[string]func(data []byte, msg []byte)),
-		compensationReplyHandlers: make(map[string]func(data []byte, msg []byte)),
+		parent:              parent,
+		actionReplyHandlers: make(map[string]func(data, msg []byte) SagaData),
 	}
 }
 
-func (b *ParticipantInvocationStepBuilder) WithAction(cmdEndpoint CommandEndpoint, cmdProvider func() []byte) *ParticipantInvocationStepBuilder {
+func (b *ParticipantInvocationStepBuilder) WithAction(cmdEndpoint CommandEndpoint, cmdProvider func([]byte) []byte) *ParticipantInvocationStepBuilder {
 	b.action = NewParticipantInvocation(cmdEndpoint, cmdProvider)
 	return b
 }
 
-func (b *ParticipantInvocationStepBuilder) WithCompensation(cmdEndpoint CommandEndpoint, cmdProvider func() []byte) *ParticipantInvocationStepBuilder {
-	b.compensation = NewParticipantInvocation(cmdEndpoint, cmdProvider)
-	return b
-}
-
-func (b *ParticipantInvocationStepBuilder) OnReply(name string, handler func(data []byte, msg []byte)) *ParticipantInvocationStepBuilder {
-	if b.compensation != nil {
-		b.compensationReplyHandlers[name] = handler
-	} else {
-		b.actionReplyHandlers[name] = handler
-	}
+func (b *ParticipantInvocationStepBuilder) OnReply(reply interface{}, handler func(data, msg []byte) SagaData) *ParticipantInvocationStepBuilder {
+	b.actionReplyHandlers[structName(reply)] = handler
 	return b
 }
 
@@ -46,7 +34,8 @@ func (b *ParticipantInvocationStepBuilder) Build() SagaDefinition {
 }
 
 func (b *ParticipantInvocationStepBuilder) addStep() {
-	b.parent.AddStep(NewParticipantInvocationStep(
-		b.action, b.compensation, b.actionReplyHandlers, b.compensationReplyHandlers,
-	))
+	b.parent.AddStep(
+		b.action.cmdEndpoint.CommandName(),
+		NewParticipantInvocationStep(b.action, b.actionReplyHandlers),
+	)
 }
