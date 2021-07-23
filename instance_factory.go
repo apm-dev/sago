@@ -1,7 +1,6 @@
 package sago
 
 import (
-	"log"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -33,20 +32,17 @@ func (sif *SagaInstanceFactory) Create(saga Saga, data SagaData) error {
 	defer sif.sagaManagersLock.RUnlock()
 	sagaManager := sif.sagaManagers[saga]
 	if sagaManager == nil {
-		// TODO log
 		return errors.Errorf("there is no SagaManager registered for %s", saga.SagaType())
 	}
-	return sagaManager.Create(data)
+	return sagaManager.create(data)
 }
 
 func (sif *SagaInstanceFactory) makeSagaManager(smf *SagaManagerFactory, saga Saga) (SagaManager, error) {
 	sagaManager := smf.Make(saga)
-	sagaManager.SubscribeToReplyChannel()
-	log.Println("subscribed to channel")
-	err := sagaManager.RegisterJobWorkers()
+	sagaManager.subscribeToReplyChannel()
+	err := sagaManager.registerJobWorkers()
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create manager for %s saga\n", saga.SagaType())
 	}
-	log.Println("job worker registered")
 	return sagaManager, nil
 }

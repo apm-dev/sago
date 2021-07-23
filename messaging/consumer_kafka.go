@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/Shopify/sarama"
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
 	"github.com/pkg/errors"
@@ -20,10 +21,15 @@ type MessageConsumerKafkaImpl struct {
 }
 
 func NewMessageConsumerKafkaImpl(brokers []string) MessageConsumer {
+	saramaSubscriberConfig := kafka.DefaultSaramaSubscriberConfig()
+	// equivalent of auto.offset.reset: earliest
+	saramaSubscriberConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
 	sub, err := kafka.NewSubscriber(
 		kafka.SubscriberConfig{
-			Brokers:     brokers,
-			Unmarshaler: kafka.DefaultMarshaler{},
+			Brokers:               brokers,
+			Unmarshaler:           kafka.DefaultMarshaler{},
+			OverwriteSaramaConfig: saramaSubscriberConfig,
+			ConsumerGroup:         "sago-consumer-group",
 		},
 		logger,
 	)
@@ -39,7 +45,7 @@ func NewMessageConsumerKafkaImpl(brokers []string) MessageConsumer {
 
 func (c *MessageConsumerKafkaImpl) Subscribe(subscriberID string, channels []string, handler func(m Message)) MessageSubscription {
 	for _, ch := range channels {
-		log.Println("registering subscriber for", ch)
+		log.Println("registering kafka subscriber for", ch)
 
 		msgs, err := c.sub.Subscribe(context.Background(), ch)
 		if err != nil {
@@ -49,14 +55,14 @@ func (c *MessageConsumerKafkaImpl) Subscribe(subscriberID string, channels []str
 			))
 		}
 		go func(ch string) {
-			log.Println(ch, "subscribing started")
+			log.Println(ch, "kafka subscribing started")
 			for msg := range msgs {
 				log.Printf("message received, id: %s", msg.UUID)
 				// TODO: store msg in db and detect message duplication
 				handler(NewMessage(msg.Payload, msg.Metadata))
 				msg.Ack()
 			}
-			log.Println(ch, "subscribing closed")
+			log.Println(ch, "kafka subscribing closed")
 		}(ch)
 	}
 	return &KafkaSubscription{

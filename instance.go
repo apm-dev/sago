@@ -7,8 +7,8 @@ type SagaInstance struct {
 	serializedSagaData       []byte
 	stateName                string
 	destinationsAndResources map[string]string
-	endState                 bool
-	compensating             bool
+	// endState                 bool
+	// compensating             bool
 }
 
 func NewSagaInstance(sagaID, sagaType, stateName, lastReqID string, serializedData []byte, destAndRes map[string]string) *SagaInstance {
@@ -64,7 +64,7 @@ func (si *SagaInstance) SetDestinationsAndResources(dr map[string]string) {
 	si.destinationsAndResources = dr
 }
 
-func (si *SagaInstance) IsEndState() bool {
+/* func (si *SagaInstance) IsEndState() bool {
 	return si.endState
 }
 func (si *SagaInstance) SetEndState(e bool) {
@@ -76,4 +76,4 @@ func (si *SagaInstance) IsCompensating() bool {
 }
 func (si *SagaInstance) SetCompensating(c bool) {
 	si.compensating = c
-}
+} */

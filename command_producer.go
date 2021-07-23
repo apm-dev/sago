@@ -30,7 +30,7 @@ func (cp *SagaCommandProducer) sendCommands(sagaType, sagaID, sagaReplyChannel s
 		msgID, err = cp.cmdProducer.Send(cmd.GetChannel(), sagaReplyChannel, cmd, headers)
 		if err != nil {
 			return "", errors.Wrapf(err,
-				"failed to send command %s of saga %s:%s on %s channel",
+				"failed to send command %s of saga %s:%s on %s channel\n",
 				cmd.GetName(), sagaType, sagaID, cmd.GetChannel(),
 			)
 		}
