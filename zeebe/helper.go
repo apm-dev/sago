@@ -3,6 +3,7 @@ package zeebe
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/camunda-cloud/zeebe/clients/go/pkg/entities"
 	"github.com/camunda-cloud/zeebe/clients/go/pkg/pb"
@@ -89,6 +90,7 @@ func PublishMessage(ctx context.Context, client zbc.Client, msgName, correlation
 	req, err := client.NewPublishMessageCommand().
 		MessageName(msgName).
 		CorrelationKey(correlationId).
+		TimeToLive(time.Minute).
 		VariablesFromMap(vars)
 
 	if err != nil {
@@ -102,6 +104,7 @@ func PublishMessage(ctx context.Context, client zbc.Client, msgName, correlation
 			"failed to send zb %s:%s PublishMessageCommand\nerr: %v",
 			msgName, correlationId, err)
 	}
+	log.Printf("zb message %s:%s published\nvariables: %v\n", msgName, correlationId, vars)
 	return nil
 }
 

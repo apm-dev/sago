@@ -10,6 +10,5 @@ const (
 
 	REPLY_SAGA_TYPE    = commands.COMMAND_REPLY_PREFIX + "saga_type"
 	REPLY_SAGA_ID      = commands.COMMAND_REPLY_PREFIX + "saga_id"
-	REPLY_COMMAND_NAME = commands.COMMAND_REPLY_PREFIX + "name"
 	REPLY_LOCKED       = "saga-locked-target"
 )
