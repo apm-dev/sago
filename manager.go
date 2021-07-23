@@ -199,10 +199,10 @@ func (sm *sagaManager) handleReply(msg messaging.Message) {
 	// header existence checked before
 	sagaID, _ := msg.RequiredHeader(REPLY_SAGA_ID)
 	sagaType, _ := msg.RequiredHeader(REPLY_SAGA_TYPE)
-	replyCmdName, err := msg.RequiredHeader(REPLY_COMMAND_NAME)
+	replyCmdName, err := msg.RequiredHeader(commands.REPLY_TYPE)
 	if err != nil {
 		log.Printf("handleReply doesn't know what to do with %+v msg without %s header\n",
-			msg, REPLY_COMMAND_NAME)
+			msg, commands.REPLY_TYPE)
 		return
 	}
 
@@ -237,15 +237,19 @@ func (sm *sagaManager) handleReply(msg messaging.Message) {
 	}
 
 	// call business logic callback to handle reply
-	sagaData := step.GetReplyHandler(msg)(sagaInstance.SerializedSagaData(), msg.Payload())
-	sagaInstance.SetSerializedSagaData(sagaData.Marshal())
-	err = sm.sagaInstanceRepository.Update(*sagaInstance)
-	if err != nil {
-		log.Printf("failed to update sagaInstance of %s:%s saga\nerr: %v\n",
-			sagaID, sagaType, err)
-		return
+	handler := step.GetReplyHandler(msg)
+	if handler != nil {
+		sagaData := handler(sagaInstance.SerializedSagaData(), msg.Payload())
+		sagaInstance.SetSerializedSagaData(sagaData.Marshal())
+		err = sm.sagaInstanceRepository.Update(*sagaInstance)
+		if err != nil {
+			log.Printf("failed to update sagaInstance of %s:%s saga\nerr: %v\n",
+				sagaID, sagaType, err)
+			return
+		}
 	}
 
+	// time.Sleep(time.Millisecond * 300)
 	err = zeebe.PublishMessage(
 		context.Background(),
 		sm.zb, replyCmdName, sagaID,

@@ -32,7 +32,7 @@ func (sd *sagaDefinition) StepsName() <-chan string {
 	go func() {
 		sd.RLock()
 		defer sd.RUnlock()
-		for name, _ := range sd.sagaSteps {
+		for name := range sd.sagaSteps {
 			ch <- name
 		}
 		close(ch)
