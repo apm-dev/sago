@@ -1,4 +1,6 @@
-package commands
+package sagocmd
+
+import "strings"
 
 const (
 	COMMAND_HEADER_PREFIX = "command_"
@@ -12,3 +14,10 @@ const (
 	IN_REPLY_TO   = "reply_to_message_id"
 	REPLY_OUTCOME = "reply_outcome-type"
 )
+
+func InReply(header string) string {
+	if strings.HasPrefix(header, COMMAND_HEADER_PREFIX) {
+		return strings.ReplaceAll(header, COMMAND_HEADER_PREFIX, COMMAND_REPLY_PREFIX)
+	}
+	return ""
+}

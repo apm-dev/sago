@@ -1,8 +1,8 @@
 package sago
 
 import (
-	"apm-dev/sago/commands"
-	"apm-dev/sago/messaging"
+	"apm-dev/sago/sagocmd"
+	"apm-dev/sago/sagomsg"
 	"log"
 )
 
@@ -25,12 +25,12 @@ func (stp *ParticipantInvocationStep) getParticipantInvocation() *ParticipantInv
 	return stp.participantInvocation
 }
 
-func (stp *ParticipantInvocationStep) IsSuccessfulReply(msg messaging.Message) bool {
+func (stp *ParticipantInvocationStep) IsSuccessfulReply(msg sagomsg.Message) bool {
 	return stp.getParticipantInvocation().isSuccessfulReply(msg)
 }
 
-func (stp *ParticipantInvocationStep) GetReplyHandler(msg messaging.Message) func(data, msg []byte) SagaData {
-	replyType, err := msg.RequiredHeader(commands.REPLY_TYPE)
+func (stp *ParticipantInvocationStep) GetReplyHandler(msg sagomsg.Message) func(data, msg []byte) SagaData {
+	replyType, err := msg.RequiredHeader(sagocmd.REPLY_TYPE)
 	if err != nil {
 		log.Printf("failed to get reply handler ->\nmsg: %v\nerr: %v\n", msg, err)
 		return nil
@@ -40,9 +40,9 @@ func (stp *ParticipantInvocationStep) GetReplyHandler(msg messaging.Message) fun
 
 /* func (stp *ParticipantInvocationStep) MakeStepOutcome(data []byte, compensating bool) StepOutcome {
 	cmd := stp.getParticipantInvocation(compensating).makeCommandToSend()
-	return NewRemoteStepOutcome([]commands.Command{cmd})
+	return NewRemoteStepOutcome([]sagocmd.Command{cmd})
 } */
 
-func (stp *ParticipantInvocationStep) Command(sagaData []byte) commands.Command {
+func (stp *ParticipantInvocationStep) Command(sagaData []byte) sagocmd.Command {
 	return stp.getParticipantInvocation().makeCommandToSend(sagaData)
 }

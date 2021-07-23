@@ -1,8 +1,8 @@
 package sago
 
 import (
-	"apm-dev/sago/commands"
-	"apm-dev/sago/messaging"
+	"apm-dev/sago/sagocmd"
+	"apm-dev/sago/sagomsg"
 
 	"github.com/camunda-cloud/zeebe/clients/go/pkg/zbc"
 )
@@ -10,16 +10,16 @@ import (
 type SagaManagerFactory struct {
 	zb                     zbc.Client
 	sagaInstanceRepository SagaInstanceRepository
-	commandProducer        commands.CommandProducer
-	messageConsumer        messaging.MessageConsumer
+	commandProducer        sagocmd.CommandProducer
+	messageConsumer        sagomsg.MessageConsumer
 	sagaCommandProducer    *SagaCommandProducer
 }
 
 func NewSagaManagerFactory(
 	zb zbc.Client,
 	sagaInstanceRepository SagaInstanceRepository,
-	commandProducer commands.CommandProducer,
-	messageConsumer messaging.MessageConsumer,
+	commandProducer sagocmd.CommandProducer,
+	messageConsumer sagomsg.MessageConsumer,
 	sagaCommandProducer *SagaCommandProducer,
 ) *SagaManagerFactory {
 	return &SagaManagerFactory{
