@@ -1,21 +1,21 @@
 package sago
 
-import "apm-dev/sago/commands"
+import "apm-dev/sago/sagocmd"
 
 type StepOutcome interface {
-	Visit(cmdConsumer func([]commands.Command))
+	Visit(cmdConsumer func([]sagocmd.Command))
 }
 
 type RemoteStepOutcome struct {
-	commandsToSend []commands.Command
+	commandsToSend []sagocmd.Command
 }
 
-func NewRemoteStepOutcome(cmds []commands.Command) *RemoteStepOutcome {
+func NewRemoteStepOutcome(cmds []sagocmd.Command) *RemoteStepOutcome {
 	return &RemoteStepOutcome{
 		commandsToSend: cmds,
 	}
 }
 
-func (r *RemoteStepOutcome) Visit(cmdConsumer func([]commands.Command)) {
+func (r *RemoteStepOutcome) Visit(cmdConsumer func([]sagocmd.Command)) {
 	cmdConsumer(r.commandsToSend)
 }

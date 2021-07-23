@@ -1,9 +1,9 @@
 package sago
 
-import "apm-dev/sago/commands"
+import "apm-dev/sago/sagocmd"
 
 type SagaActions struct {
-	commands        []commands.Command
+	commands        []sagocmd.Command
 	updatedSagaData []byte
 	updatedState    string
 	endState        bool
@@ -11,7 +11,7 @@ type SagaActions struct {
 }
 
 func NewSagaActions(
-	commands []commands.Command,
+	commands []sagocmd.Command,
 	updatedSagaData []byte,
 	updatedState string,
 	endState, compensating bool) *SagaActions {
@@ -21,7 +21,7 @@ func NewSagaActions(
 	}
 }
 
-func (sa *SagaActions) Commands() []commands.Command { return sa.commands }
+func (sa *SagaActions) Commands() []sagocmd.Command { return sa.commands }
 
 func (sa *SagaActions) UpdatedSagaData() []byte { return sa.updatedSagaData }
 
@@ -32,7 +32,7 @@ func (sa *SagaActions) IsEndState() bool { return sa.endState }
 func (sa *SagaActions) IsCompensating() bool { return sa.compensating }
 
 type SagaActionsBuilder struct {
-	commands        []commands.Command
+	commands        []sagocmd.Command
 	updatedSagaData []byte
 	updatedState    string
 	endState        bool
@@ -41,7 +41,7 @@ type SagaActionsBuilder struct {
 
 func NewSagaActionsBuilder() *SagaActionsBuilder {
 	return &SagaActionsBuilder{
-		commands: []commands.Command{},
+		commands: []sagocmd.Command{},
 	}
 }
 
@@ -53,12 +53,12 @@ func (b *SagaActionsBuilder) Build() *SagaActions {
 	)
 }
 
-func (b *SagaActionsBuilder) WithCommand(cmd commands.Command) *SagaActionsBuilder {
+func (b *SagaActionsBuilder) WithCommand(cmd sagocmd.Command) *SagaActionsBuilder {
 	b.commands = append(b.commands, cmd)
 	return b
 }
 
-func (b *SagaActionsBuilder) WithCommands(cmds []commands.Command) *SagaActionsBuilder {
+func (b *SagaActionsBuilder) WithCommands(cmds []sagocmd.Command) *SagaActionsBuilder {
 	for _, cmd := range cmds {
 		b.WithCommand(cmd)
 	}

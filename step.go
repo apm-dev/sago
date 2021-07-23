@@ -1,17 +1,17 @@
 package sago
 
 import (
-	"apm-dev/sago/commands"
-	"apm-dev/sago/messaging"
+	"apm-dev/sago/sagocmd"
+	"apm-dev/sago/sagomsg"
 )
 
 type SagaStep interface {
 	//   StepOutcome makeStepOutcome(Data data, boolean compensating);
-	IsSuccessfulReply(message messaging.Message) bool
-	GetReplyHandler(msg messaging.Message) func(data, msg []byte) SagaData
+	IsSuccessfulReply(message sagomsg.Message) bool
+	GetReplyHandler(msg sagomsg.Message) func(data, msg []byte) SagaData
 	// MakeStepOutcome(data []byte, compensating bool) StepOutcome
-	// Command(compensating bool) commands.Command
-	Command(sagaData []byte) commands.Command
+	// Command(compensating bool) sagocmd.Command
+	Command(sagaData []byte) sagocmd.Command
 	// HasAction() bool
 	// HasCompensation() bool
 }

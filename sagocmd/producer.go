@@ -1,7 +1,7 @@
-package commands
+package sagocmd
 
 import (
-	"apm-dev/sago/messaging"
+	"apm-dev/sago/sagomsg"
 
 	"github.com/pkg/errors"
 )
@@ -12,10 +12,10 @@ type CommandProducer interface {
 }
 
 type commandProducerImpl struct {
-	msgProducer messaging.MessageProducer
+	msgProducer sagomsg.MessageProducer
 }
 
-func NewCommandProducerImpl(mp messaging.MessageProducer) CommandProducer {
+func NewCommandProducerImpl(mp sagomsg.MessageProducer) CommandProducer {
 	return &commandProducerImpl{
 		msgProducer: mp,
 	}

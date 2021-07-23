@@ -1,4 +1,4 @@
-package messaging
+package sagomsg
 
 type MessageBuilder struct {
 	Body    []byte

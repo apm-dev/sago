@@ -1,7 +1,7 @@
-package commands
+package sagocmd
 
 import (
-	"apm-dev/sago/messaging"
+	"apm-dev/sago/sagomsg"
 )
 
 type CommandReplyOutcome string
@@ -18,8 +18,8 @@ type Command interface {
 	GetExtraHeaders() map[string]string
 }
 
-func MakeMessage(channel, replyTo string, cmd Command, headers map[string]string) messaging.Message {
-	b := messaging.WithPayload(cmd.GetPayload())
+func MakeMessage(channel, replyTo string, cmd Command, headers map[string]string) sagomsg.Message {
+	b := sagomsg.WithPayload(cmd.GetPayload())
 	b.WithExtraHeaders("", headers)
 	b.WithHeader(DESTINATION, channel)
 	b.WithHeader(COMMAND_TYPE, cmd.GetName())

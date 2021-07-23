@@ -1,8 +1,8 @@
 package sago
 
 import (
-	"apm-dev/sago/commands"
-	"apm-dev/sago/messaging"
+	"apm-dev/sago/sagocmd"
+	"apm-dev/sago/sagomsg"
 	"log"
 	"strings"
 )
@@ -16,16 +16,16 @@ func NewParticipantInvocation(cmdEndpoint CommandEndpoint, cmdProvider func(data
 	return &ParticipantInvocation{cmdEndpoint, cmdProvider}
 }
 
-func (pi *ParticipantInvocation) isSuccessfulReply(msg messaging.Message) bool {
-	val, err := msg.RequiredHeader(commands.REPLY_OUTCOME)
+func (pi *ParticipantInvocation) isSuccessfulReply(msg sagomsg.Message) bool {
+	val, err := msg.RequiredHeader(sagocmd.REPLY_OUTCOME)
 	if err != nil {
 		log.Printf("failed to check message successfulness\nmsg: %v\n", msg)
 		return false
 	}
-	return strings.EqualFold(val, string(commands.SUCCESS))
+	return strings.EqualFold(val, string(sagocmd.SUCCESS))
 }
 
-func (pi *ParticipantInvocation) makeCommandToSend(sagaData []byte) commands.Command {
+func (pi *ParticipantInvocation) makeCommandToSend(sagaData []byte) sagocmd.Command {
 	return NewCommand(
 		pi.cmdEndpoint.CommandName(),
 		pi.cmdEndpoint.Channel(),

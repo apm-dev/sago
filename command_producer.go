@@ -1,23 +1,23 @@
 package sago
 
 import (
-	"apm-dev/sago/commands"
+	"apm-dev/sago/sagocmd"
 
 	"github.com/pkg/errors"
 )
 
 type SagaCommandProducer struct {
-	cmdProducer commands.CommandProducer
+	cmdProducer sagocmd.CommandProducer
 }
 
-func NewSagaCommandProducer(cp commands.CommandProducer) *SagaCommandProducer {
+func NewSagaCommandProducer(cp sagocmd.CommandProducer) *SagaCommandProducer {
 	if cp == nil {
 		panic("command producer should not be nil")
 	}
 	return &SagaCommandProducer{cp}
 }
 
-func (cp *SagaCommandProducer) sendCommands(sagaType, sagaID, sagaReplyChannel string, commands []commands.Command) (string, error) {
+func (cp *SagaCommandProducer) sendCommands(sagaType, sagaID, sagaReplyChannel string, commands []sagocmd.Command) (string, error) {
 	var msgID string
 	for _, cmd := range commands {
 		headers := make(map[string]string)

@@ -1,8 +1,8 @@
 package sago
 
 import (
-	"apm-dev/sago/commands"
-	"apm-dev/sago/messaging"
+	"apm-dev/sago/sagocmd"
+	"apm-dev/sago/sagomsg"
 	"apm-dev/sago/zeebe"
 	"context"
 	"fmt"
@@ -25,8 +25,8 @@ func NewSagaManager(
 	saga Saga,
 	zb zbc.Client,
 	sagaInstanceRepository SagaInstanceRepository,
-	commandProducer commands.CommandProducer,
-	messageConsumer messaging.MessageConsumer,
+	commandProducer sagocmd.CommandProducer,
+	messageConsumer sagomsg.MessageConsumer,
 	sagaCommandProducer *SagaCommandProducer,
 ) SagaManager {
 	return &sagaManager{
@@ -44,8 +44,8 @@ type sagaManager struct {
 	saga                   Saga
 	zb                     zbc.Client
 	sagaInstanceRepository SagaInstanceRepository
-	commandProducer        commands.CommandProducer
-	messageConsumer        messaging.MessageConsumer
+	commandProducer        sagocmd.CommandProducer
+	messageConsumer        sagomsg.MessageConsumer
 	sagaCommandProducer    *SagaCommandProducer
 }
 
@@ -138,7 +138,7 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 	lastReqID, err := sm.sagaCommandProducer.sendCommands(
 		sm.getSagaType(), sagaID,
 		sm.makeSagaReplyChannel(),
-		[]commands.Command{cmd},
+		[]sagocmd.Command{cmd},
 	)
 	if err != nil {
 		zeebe.FailJob(client, job,
@@ -178,7 +178,7 @@ func (sm *sagaManager) subscribeToReplyChannel() {
 	)
 }
 
-func (sm *sagaManager) handleMessage(msg messaging.Message) {
+func (sm *sagaManager) handleMessage(msg sagomsg.Message) {
 	// TODO log
 	log.Printf("handle message invoked %+v", msg)
 	if msg.HasHeader(REPLY_SAGA_ID) {
@@ -189,7 +189,7 @@ func (sm *sagaManager) handleMessage(msg messaging.Message) {
 	}
 }
 
-func (sm *sagaManager) handleReply(msg messaging.Message) {
+func (sm *sagaManager) handleReply(msg sagomsg.Message) {
 	// TODO implement
 	if !sm.isReplyForThisSagaType(msg) {
 		return
@@ -199,10 +199,10 @@ func (sm *sagaManager) handleReply(msg messaging.Message) {
 	// header existence checked before
 	sagaID, _ := msg.RequiredHeader(REPLY_SAGA_ID)
 	sagaType, _ := msg.RequiredHeader(REPLY_SAGA_TYPE)
-	replyCmdName, err := msg.RequiredHeader(commands.REPLY_TYPE)
+	replyCmdName, err := msg.RequiredHeader(sagocmd.REPLY_TYPE)
 	if err != nil {
 		log.Printf("handleReply doesn't know what to do with %+v msg without %s header\n",
-			msg, commands.REPLY_TYPE)
+			msg, sagocmd.REPLY_TYPE)
 		return
 	}
 
@@ -283,6 +283,6 @@ func (sm *sagaManager) getStateDefinition() (SagaDefinition, error) {
 	return def, nil
 }
 
-func (sm *sagaManager) isReplyForThisSagaType(msg messaging.Message) bool {
+func (sm *sagaManager) isReplyForThisSagaType(msg sagomsg.Message) bool {
 	return strings.EqualFold(msg.Header(REPLY_SAGA_TYPE), sm.getSagaType())
 }
