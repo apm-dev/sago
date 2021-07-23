@@ -16,9 +16,9 @@ import (
 )
 
 type SagaManager interface {
-	Create(data SagaData) error
-	SubscribeToReplyChannel()
-	RegisterJobWorkers() error
+	create(data SagaData) error
+	subscribeToReplyChannel()
+	registerJobWorkers() error
 }
 
 func NewSagaManager(
@@ -49,7 +49,7 @@ type sagaManager struct {
 	sagaCommandProducer    *SagaCommandProducer
 }
 
-func (sm *sagaManager) Create(data SagaData) error {
+func (sm *sagaManager) create(data SagaData) error {
 	dataSerd := data.Marshal()
 
 	sagaInstance := NewSagaInstance(
@@ -85,7 +85,7 @@ func (sm *sagaManager) Create(data SagaData) error {
 	return nil
 }
 
-func (sm *sagaManager) RegisterJobWorkers() error {
+func (sm *sagaManager) registerJobWorkers() error {
 	def, err := sm.getStateDefinition()
 	if err != nil {
 		return errors.Wrapf(
@@ -170,7 +170,7 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 	}
 }
 
-func (sm *sagaManager) SubscribeToReplyChannel() {
+func (sm *sagaManager) subscribeToReplyChannel() {
 	sm.messageConsumer.Subscribe(
 		fmt.Sprintf("%s-consumer", sm.saga.SagaType()),
 		[]string{sm.makeSagaReplyChannel()},

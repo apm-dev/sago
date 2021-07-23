@@ -3,6 +3,7 @@ module apm-dev/sago
 go 1.15
 
 require (
+	github.com/Shopify/sarama v1.26.0
 	github.com/ThreeDotsLabs/watermill v1.0.2
 	github.com/ThreeDotsLabs/watermill-kafka/v2 v2.2.1
 	github.com/camunda-cloud/zeebe/clients/go v1.1.1
