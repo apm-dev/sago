@@ -1,11 +1,11 @@
-package sago
+package common
 
 import (
 	"reflect"
 	"strings"
 )
 
-func structName(s interface{}) string {
+func StructName(s interface{}) string {
 	str, ok := s.(string)
 	if ok {
 		return str

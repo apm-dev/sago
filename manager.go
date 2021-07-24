@@ -234,18 +234,18 @@ func (sm *sagaManager) handleReply(msg sagomsg.Message) {
 	result := "failed"
 	if step.IsSuccessfulReply(msg) {
 		result = "success"
-	}
 
-	// call business logic callback to handle reply
-	handler := step.GetReplyHandler(msg)
-	if handler != nil {
-		sagaData := handler(sagaInstance.SerializedSagaData(), msg.Payload())
-		sagaInstance.SetSerializedSagaData(sagaData.Marshal())
-		err = sm.sagaInstanceRepository.Update(*sagaInstance)
-		if err != nil {
-			log.Printf("failed to update sagaInstance of %s:%s saga\nerr: %v\n",
-				sagaID, sagaType, err)
-			return
+		// call business logic callback to handle reply
+		handler := step.GetReplyHandler(msg)
+		if handler != nil {
+			sagaData := handler(sagaInstance.SerializedSagaData(), msg.Payload())
+			sagaInstance.SetSerializedSagaData(sagaData.Marshal())
+			err = sm.sagaInstanceRepository.Update(*sagaInstance)
+			if err != nil {
+				log.Printf("failed to update sagaInstance of %s:%s saga\nerr: %v\n",
+					sagaID, sagaType, err)
+				return
+			}
 		}
 	}
 

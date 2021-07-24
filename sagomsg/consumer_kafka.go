@@ -45,6 +45,10 @@ func NewMessageConsumerKafkaImpl(brokers []string) MessageConsumer {
 
 func (c *MessageConsumerKafkaImpl) Subscribe(subscriberID string, channels []string, handler func(m Message)) MessageSubscription {
 	for _, ch := range channels {
+		if ch == "" {
+			log.Println("could not subscribe on empty channel")
+			continue
+		}
 		log.Println("registering kafka subscriber for", ch)
 
 		msgs, err := c.sub.Subscribe(context.Background(), ch)

@@ -1,6 +1,7 @@
 package sago
 
 import (
+	"apm-dev/sago/common"
 	"apm-dev/sago/sagocmd"
 	"apm-dev/sago/sagomsg"
 )
@@ -19,7 +20,7 @@ func NewSagaCommandHandlersBuilder(channel string) *SagaCommandHandlersBuilder {
 
 func (b *SagaCommandHandlersBuilder) OnMessage(cmd interface{}, handler func([]byte) sagomsg.Message) *SagaCommandHandlersBuilder {
 	b.handlers = append(b.handlers,
-		*sagocmd.NewCommandHandler(b.channel, structName(cmd), handler))
+		*sagocmd.NewCommandHandler(b.channel, common.StructName(cmd), handler))
 	return b
 }
 

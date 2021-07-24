@@ -29,11 +29,11 @@ func NewMessageProducerKafkaImpl(brokers []string) (*MessageProducerKafkaImpl, e
 
 func (p *MessageProducerKafkaImpl) Send(destination string, msg Message) error {
 	prepareMessageHeaders(msg, destination)
+	// TODO use uuid
+	id := watermill.NewShortUUID()
+	msg.SetHeader(ID, id)
 
-	kmsg := wmsg.NewMessage(
-		watermill.NewUUID(),
-		msg.Payload(),
-	)
+	kmsg := wmsg.NewMessage(id, msg.Payload())
 	kmsg.Metadata = msg.Headers()
 
 	err := p.pub.Publish(destination, kmsg)
@@ -44,6 +44,5 @@ func (p *MessageProducerKafkaImpl) Send(destination string, msg Message) error {
 		)
 	}
 
-	msg.SetHeader(ID, kmsg.UUID)
 	return nil
 }
