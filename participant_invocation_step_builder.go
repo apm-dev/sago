@@ -1,5 +1,7 @@
 package sago
 
+import "apm-dev/sago/common"
+
 type ParticipantInvocationStepBuilder struct {
 	parent              *SagaDefinitionBuilder
 	action              *ParticipantInvocation
@@ -19,7 +21,7 @@ func (b *ParticipantInvocationStepBuilder) WithAction(cmdEndpoint CommandEndpoin
 }
 
 func (b *ParticipantInvocationStepBuilder) OnReply(reply interface{}, handler func(data, msg []byte) SagaData) *ParticipantInvocationStepBuilder {
-	b.actionReplyHandlers[structName(reply)] = handler
+	b.actionReplyHandlers[common.StructName(reply)] = handler
 	return b
 }
 

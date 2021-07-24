@@ -11,7 +11,7 @@ type CommandHandlerParams struct {
 	defaultReplyChannel string
 }
 
-func NewCommandReplyHandlerParams(msg sagomsg.Message) *CommandHandlerParams {
+func NewCommandHandlerParams(msg sagomsg.Message) *CommandHandlerParams {
 	return &CommandHandlerParams{
 		command:             msg.Payload(),
 		correlationHeaders:  getCorrelationHeaders(msg.Headers()),
@@ -28,4 +28,16 @@ func getCorrelationHeaders(headers map[string]string) map[string]string {
 	}
 	cheaders[IN_REPLY_TO] = headers[sagomsg.ID]
 	return cheaders
+}
+
+func (p *CommandHandlerParams) Command() []byte {
+	return p.command
+}
+
+func (p *CommandHandlerParams) CorrelationHeaders() map[string]string {
+	return p.correlationHeaders
+}
+
+func (p *CommandHandlerParams) DefaultReplyChannel() string {
+	return p.defaultReplyChannel
 }

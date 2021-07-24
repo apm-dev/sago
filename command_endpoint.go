@@ -1,5 +1,7 @@
 package sago
 
+import "apm-dev/sago/common"
+
 type CommandEndpoint struct {
 	command interface{}
 	channel string
@@ -14,7 +16,7 @@ func (c *CommandEndpoint) Command() interface{} {
 }
 
 func (c *CommandEndpoint) CommandName() string {
-	return structName(c.command)
+	return common.StructName(c.command)
 }
 
 func (c *CommandEndpoint) Channel() string {

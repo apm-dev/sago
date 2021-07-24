@@ -15,7 +15,7 @@ func (h *CommandHandlers) Channels() []string {
 	for _, handler := range h.handlers {
 		channelsMap[handler.Channel()] = 0
 	}
-	channels := make([]string, len(channelsMap))
+	channels := make([]string, 0, len(channelsMap))
 	for channel := range channelsMap {
 		channels = append(channels, channel)
 	}

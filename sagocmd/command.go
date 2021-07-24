@@ -7,7 +7,7 @@ import (
 type CommandReplyOutcome string
 
 const (
-	FAILED  CommandReplyOutcome = "failed"
+	FAILURE  CommandReplyOutcome = "failed"
 	SUCCESS CommandReplyOutcome = "success"
 )
 
