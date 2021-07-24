@@ -254,7 +254,7 @@ func (sm *sagaManager) handleReply(msg sagomsg.Message) {
 		context.Background(),
 		sm.zb, replyCmdName, sagaID,
 		map[string]interface{}{
-			ZB_TASK_RESULT: result,
+			stepName + "Result": result,
 		},
 	)
 
