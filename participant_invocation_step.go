@@ -8,12 +8,12 @@ import (
 
 type ParticipantInvocationStep struct {
 	participantInvocation *ParticipantInvocation
-	actionReplyHandlers   map[string]func(data, msg []byte) SagaData
+	actionReplyHandlers   map[string]func(data, msg []byte, successful bool) SagaData
 }
 
 func NewParticipantInvocationStep(
 	participantInvocation *ParticipantInvocation,
-	actionReplyHandlers map[string]func(data, msg []byte) SagaData,
+	actionReplyHandlers map[string]func(data, msg []byte, successful bool) SagaData,
 ) *ParticipantInvocationStep {
 	return &ParticipantInvocationStep{
 		participantInvocation: participantInvocation,
@@ -29,7 +29,7 @@ func (stp *ParticipantInvocationStep) IsSuccessfulReply(msg sagomsg.Message) boo
 	return stp.getParticipantInvocation().isSuccessfulReply(msg)
 }
 
-func (stp *ParticipantInvocationStep) GetReplyHandler(msg sagomsg.Message) func(data, msg []byte) SagaData {
+func (stp *ParticipantInvocationStep) GetReplyHandler(msg sagomsg.Message) func(data, msg []byte, successful bool) SagaData {
 	replyType, err := msg.RequiredHeader(sagocmd.REPLY_TYPE)
 	if err != nil {
 		log.Printf("failed to get reply handler ->\nmsg: %v\nerr: %v\n", msg, err)

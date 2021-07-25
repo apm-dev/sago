@@ -9,5 +9,5 @@ func NewStepBuilder(sdb *SagaDefinitionBuilder) *StepBuilder {
 }
 
 func (b *StepBuilder) InvokeParticipant(ce CommandEndpoint, cmdProvider func(sagaData []byte) []byte) *ParticipantInvocationStepBuilder {
-	return NewParticipantInvocationStepBuilder(b.parent).WithAction(ce, cmdProvider)
+	return NewParticipantInvocationStepBuilder(b.parent).withAction(ce, cmdProvider)
 }
