@@ -95,7 +95,7 @@ func (sm *sagaManager) registerJobWorkers() error {
 		)
 	}
 	log.Println("start registering jobs")
-	for step := range def.StepsName() {
+	for step := range def.stepsName() {
 		go sm.zb.NewJobWorker().JobType(step).Handler(sm.handleJob).Open()
 		log.Println("job registered for", step)
 	}
@@ -126,7 +126,7 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 	def, _ := sm.getStateDefinition()
 
 	// get saga step related to this job
-	step := def.Step(jobType)
+	step := def.step(jobType)
 	if step == nil {
 		zeebe.FailJob(client, job,
 			fmt.Sprintf("there is no step for %s:%d job\n", jobType, jobKey))
@@ -225,31 +225,31 @@ func (sm *sagaManager) handleReply(msg sagomsg.Message) {
 	}
 
 	stepName := strings.TrimSuffix(replyCmdName, "Reply")
-	step := sagaDefinition.Step(stepName)
+	step := sagaDefinition.step(stepName)
 	if step == nil {
 		log.Printf("there is no %s step defined for %s:%s saga\n", stepName, sagaType, sagaID)
 		return
 	}
 
 	result := "failed"
-	if step.IsSuccessfulReply(msg) {
+	isSuccessful := step.IsSuccessfulReply(msg)
+	if isSuccessful {
 		result = "success"
+	}
 
-		// call business logic callback to handle reply
-		handler := step.GetReplyHandler(msg)
-		if handler != nil {
-			sagaData := handler(sagaInstance.SerializedSagaData(), msg.Payload())
-			sagaInstance.SetSerializedSagaData(sagaData.Marshal())
-			err = sm.sagaInstanceRepository.Update(*sagaInstance)
-			if err != nil {
-				log.Printf("failed to update sagaInstance of %s:%s saga\nerr: %v\n",
-					sagaID, sagaType, err)
-				return
-			}
+	// call business logic callback to handle reply
+	handler := step.GetReplyHandler(msg)
+	if handler != nil {
+		sagaData := handler(sagaInstance.SerializedSagaData(), msg.Payload(), isSuccessful)
+		sagaInstance.SetSerializedSagaData(sagaData.Marshal())
+		err = sm.sagaInstanceRepository.Update(*sagaInstance)
+		if err != nil {
+			log.Printf("failed to update sagaInstance of %s:%s saga\nerr: %v\n",
+				sagaID, sagaType, err)
+			return
 		}
 	}
 
-	// time.Sleep(time.Millisecond * 300)
 	err = zeebe.PublishMessage(
 		context.Background(),
 		sm.zb, replyCmdName, sagaID,
