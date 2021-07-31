@@ -5,8 +5,8 @@ type Saga interface {
 	SagaType() string
 
 	OnStarting(sagaID string, data []byte)
-	OnSagaCompletedSuccessfully(sagaID string, data []byte)
-	OnSagaRolledBack(sagaID string, data []byte)
+	// OnSagaCompletedSuccessfully(sagaID string, data []byte)
+	// OnSagaRolledBack(sagaID string, data []byte)
 }
 
 func Step() *StepBuilder {

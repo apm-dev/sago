@@ -63,7 +63,7 @@ func (sm *sagaManager) create(data SagaData) error {
 	}
 	sagaInstance.SetID(sagaID)
 
-	sm.saga.OnStarting(sagaID, dataSerd)
+	go sm.saga.OnStarting(sagaID, dataSerd)
 
 	req, err := sm.zb.NewPublishMessageCommand().
 		MessageName(sm.getSagaType()).
