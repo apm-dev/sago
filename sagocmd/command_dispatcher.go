@@ -1,7 +1,7 @@
 package sagocmd
 
 import (
-	"apm-dev/sago/sagomsg"
+	"github.com/apm-dev/sago/sagomsg"
 	"log"
 )
 

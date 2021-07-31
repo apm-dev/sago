@@ -1,6 +1,6 @@
 package sago
 
-import "apm-dev/sago/common"
+import "github.com/apm-dev/sago/common"
 
 type CommandEndpoint struct {
 	command interface{}

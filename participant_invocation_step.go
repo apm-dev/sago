@@ -1,8 +1,8 @@
 package sago
 
 import (
-	"apm-dev/sago/sagocmd"
-	"apm-dev/sago/sagomsg"
+	"github.com/apm-dev/sago/sagocmd"
+	"github.com/apm-dev/sago/sagomsg"
 	"log"
 )
 

@@ -1,9 +1,9 @@
 package sago
 
 import (
-	"apm-dev/sago/common"
-	"apm-dev/sago/sagocmd"
-	"apm-dev/sago/sagomsg"
+	"github.com/apm-dev/sago/common"
+	"github.com/apm-dev/sago/sagocmd"
+	"github.com/apm-dev/sago/sagomsg"
 )
 
 type SagaCommandHandlersBuilder struct {
