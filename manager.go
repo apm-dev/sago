@@ -1,9 +1,9 @@
 package sago
 
 import (
-	"apm-dev/sago/sagocmd"
-	"apm-dev/sago/sagomsg"
-	"apm-dev/sago/zeebe"
+	"github.com/apm-dev/sago/sagocmd"
+	"github.com/apm-dev/sago/sagomsg"
+	"github.com/apm-dev/sago/zeebe"
 	"context"
 	"fmt"
 	"log"

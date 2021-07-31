@@ -1,8 +1,9 @@
 package sagocmd
 
 import (
-	"apm-dev/sago/sagomsg"
 	"strings"
+
+	"github.com/apm-dev/sago/sagomsg"
 )
 
 type CommandHandlerParams struct {

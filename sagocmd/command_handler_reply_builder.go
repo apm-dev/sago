@@ -1,8 +1,8 @@
 package sagocmd
 
 import (
-	"apm-dev/sago/common"
-	"apm-dev/sago/sagomsg"
+	"github.com/apm-dev/sago/common"
+	"github.com/apm-dev/sago/sagomsg"
 )
 
 var ReplyBuilder = &CommandHandlerReplyBuilder{}
