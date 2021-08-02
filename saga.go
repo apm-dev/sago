@@ -4,7 +4,7 @@ type Saga interface {
 	SagaDefinition() SagaDefinition
 	SagaType() string
 
-	OnStarting(sagaID string, data []byte)
+	// OnStarting(sagaID string, data []byte)
 	// OnSagaCompletedSuccessfully(sagaID string, data []byte)
 	// OnSagaRolledBack(sagaID string, data []byte)
 }
