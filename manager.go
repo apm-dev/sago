@@ -1,13 +1,14 @@
 package sago
 
 import (
-	"github.com/apm-dev/sago/sagocmd"
-	"github.com/apm-dev/sago/sagomsg"
-	"github.com/apm-dev/sago/zeebe"
 	"context"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/apm-dev/sago/sagocmd"
+	"github.com/apm-dev/sago/sagomsg"
+	"github.com/apm-dev/sago/zeebe"
 
 	"github.com/camunda-cloud/zeebe/clients/go/pkg/entities"
 	"github.com/camunda-cloud/zeebe/clients/go/pkg/worker"
@@ -18,6 +19,7 @@ import (
 type SagaManager interface {
 	create(data SagaData) error
 	subscribeToReplyChannel()
+	deployProcess(path string) error
 	registerJobWorkers() error
 }
 
@@ -81,6 +83,17 @@ func (sm *sagaManager) create(data SagaData) error {
 	if err != nil {
 		return errors.Wrapf(err,
 			"failed to send start saga message %s:%s\n", sm.getSagaType(), sagaID)
+	}
+	return nil
+}
+
+func (sm *sagaManager) deployProcess(path string) error {
+	err := zeebe.DeployProcess(sm.zb, path)
+	if err != nil {
+		return errors.Wrapf(err,
+			"failed to deploy process in %s for %s\n",
+			path, sm.getSagaType(),
+		)
 	}
 	return nil
 }

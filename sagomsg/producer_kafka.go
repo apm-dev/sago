@@ -11,7 +11,7 @@ type MessageProducerKafkaImpl struct {
 	pub wmsg.Publisher
 }
 
-func NewMessageProducerKafkaImpl(brokers []string) (*MessageProducerKafkaImpl, error) {
+func NewMessageProducerKafkaImpl(brokers []string) (MessageProducer, error) {
 	p := MessageProducerKafkaImpl{}
 	var err error
 	p.pub, err = kafka.NewPublisher(
