@@ -40,7 +40,7 @@ type PostgreConfig struct {
 	TimeZone string
 }
 
-func NewSagaInstanceRepositoryPostgreImpl(conf PostgreConfig) *SagaInstanceRepositoryPostgreImpl {
+func NewSagaInstanceRepositoryPostgreImpl(conf PostgreConfig) SagaInstanceRepository {
 	if conf.TimeZone == "" {
 		conf.TimeZone = "GMT"
 	}
