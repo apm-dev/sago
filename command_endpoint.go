@@ -1,6 +1,6 @@
 package sago
 
-import "github.com/apm-dev/sago/common"
+import "git.coryptex.com/lib/sago/common"
 
 type CommandEndpoint struct {
 	command interface{}

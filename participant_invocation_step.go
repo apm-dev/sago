@@ -1,8 +1,8 @@
 package sago
 
 import (
-	"github.com/apm-dev/sago/sagocmd"
-	"github.com/apm-dev/sago/sagomsg"
+	"git.coryptex.com/lib/sago/sagocmd"
+	"git.coryptex.com/lib/sago/sagomsg"
 	"log"
 )
 

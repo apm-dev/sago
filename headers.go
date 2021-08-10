@@ -1,7 +1,7 @@
 package sago
 
 import (
-	"github.com/apm-dev/sago/sagocmd"
+	"git.coryptex.com/lib/sago/sagocmd"
 )
 
 const (

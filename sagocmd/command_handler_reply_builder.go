@@ -1,8 +1,8 @@
 package sagocmd
 
 import (
-	"github.com/apm-dev/sago/common"
-	"github.com/apm-dev/sago/sagomsg"
+	"git.coryptex.com/lib/sago/common"
+	"git.coryptex.com/lib/sago/sagomsg"
 )
 
 var ReplyBuilder = &CommandHandlerReplyBuilder{}

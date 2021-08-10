@@ -1,4 +1,4 @@
-module github.com/apm-dev/sago
+module git.coryptex.com/lib/sago
 
 go 1.15
 

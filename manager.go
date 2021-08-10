@@ -6,9 +6,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/apm-dev/sago/sagocmd"
-	"github.com/apm-dev/sago/sagomsg"
-	"github.com/apm-dev/sago/zeebe"
+	"git.coryptex.com/lib/sago/sagocmd"
+	"git.coryptex.com/lib/sago/sagomsg"
+	"git.coryptex.com/lib/sago/zeebe"
 
 	"github.com/camunda-cloud/zeebe/clients/go/pkg/entities"
 	"github.com/camunda-cloud/zeebe/clients/go/pkg/worker"

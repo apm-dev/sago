@@ -1,7 +1,7 @@
 package sagocmd
 
 import (
-	"github.com/apm-dev/sago/sagomsg"
+	"git.coryptex.com/lib/sago/sagomsg"
 
 	"github.com/pkg/errors"
 )

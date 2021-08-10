@@ -3,7 +3,7 @@ package sagocmd
 import (
 	"strings"
 
-	"github.com/apm-dev/sago/sagomsg"
+	"git.coryptex.com/lib/sago/sagomsg"
 )
 
 type CommandHandlerParams struct {

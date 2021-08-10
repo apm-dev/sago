@@ -1,6 +1,6 @@
 package sagocmd
 
-import "github.com/apm-dev/sago/sagomsg"
+import "git.coryptex.com/lib/sago/sagomsg"
 
 type CommandMessage struct {
 	messageID          string

@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/apm-dev/sago/sagomsg"
+	"git.coryptex.com/lib/sago/sagomsg"
 )
 
 type CommandHandler struct {
