@@ -3,7 +3,6 @@ package sago
 import (
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/pkg/errors"
 	"gorm.io/driver/postgres"
@@ -15,15 +14,15 @@ type SagaInstanceRepositoryPostgreImpl struct {
 }
 
 type sagaInstancePgSchema struct {
-	SagaID        uint   `gorm:"primaryKey"`
-	SagaType      string `gorm:"index"`
+	SagaID        string `gorm:"primaryKey"`
+	SagaType      string `gorm:"primaryKey"`
 	StateName     string
 	LastRequestID string
 	SagaData      []byte
 	// EndState      bool
 	// Compensating  bool
-	CreatedAt     int64 `gorm:"autoCreateTime"`
-	UpdatedAt     int64 `gorm:"autoUpdateTime"`
+	CreatedAt int64 `gorm:"autoCreateTime"`
+	UpdatedAt int64 `gorm:"autoUpdateTime"`
 }
 
 func (sagaInstancePgSchema) TableName() string {
@@ -73,6 +72,7 @@ func NewSagaInstanceRepositoryPostgreImpl(conf PostgreConfig) SagaInstanceReposi
 
 func (r *SagaInstanceRepositoryPostgreImpl) Save(si SagaInstance) (string, error) {
 	data := sagaInstancePgSchema{
+		SagaID:        si.ID(),
 		SagaType:      si.SagaType(),
 		StateName:     si.StateName(),
 		LastRequestID: si.LastRequestID(),
@@ -85,14 +85,14 @@ func (r *SagaInstanceRepositoryPostgreImpl) Save(si SagaInstance) (string, error
 	if result.Error != nil {
 		return "", errors.Wrapf(
 			result.Error,
-			"Couldn't store sagaInstance of %s saga\n",
-			si.SagaType(),
+			"failed to store sagaInstance of %s:%s saga\n",
+			si.SagaType(), si.ID(),
 		)
 	}
 
-	log.Printf("saving SagaInstance %s:%d\n", si.SagaType(), data.SagaID)
+	log.Printf("SagaInstance %s:%s was saved\n", si.SagaType(), data.SagaID)
 
-	return strconv.Itoa(int(data.SagaID)), nil
+	return data.SagaID, nil
 }
 
 func (r *SagaInstanceRepositoryPostgreImpl) Find(sagaType, sagaID string) (*SagaInstance, error) {
@@ -110,7 +110,7 @@ func (r *SagaInstanceRepositoryPostgreImpl) Find(sagaType, sagaID string) (*Saga
 	}
 
 	si := NewSagaInstance(
-		strconv.Itoa(int(data.SagaID)), data.SagaType,
+		data.SagaID, data.SagaType,
 		data.StateName, data.LastRequestID,
 		data.SagaData, nil,
 	)
@@ -121,17 +121,15 @@ func (r *SagaInstanceRepositoryPostgreImpl) Find(sagaType, sagaID string) (*Saga
 }
 
 func (r *SagaInstanceRepositoryPostgreImpl) Update(si SagaInstance) error {
-	id, err := strconv.Atoi(si.ID())
-	if err != nil {
-		return errors.Wrapf(
-			err,
-			"Couldn't convert SagaInstance type:%s id:%s to uint",
+	if si.ID() == "" || si.SagaType() == "" {
+		return errors.Errorf(
+			"Saga id and type should not be nil, id:%s, type:%s\n",
 			si.SagaType(), si.ID(),
 		)
 	}
 
 	data := sagaInstancePgSchema{
-		SagaID:        uint(id),
+		SagaID:        si.ID(),
 		SagaType:      si.SagaType(),
 		StateName:     si.StateName(),
 		LastRequestID: si.LastRequestID(),
@@ -151,7 +149,7 @@ func (r *SagaInstanceRepositoryPostgreImpl) Update(si SagaInstance) error {
 	if result.Error != nil || result.RowsAffected != 1 {
 		return errors.Wrapf(
 			result.Error,
-			"Couldn't update SagaInstance type:%s, id:%s",
+			"failed to update SagaInstance %s:%s\n",
 			data.SagaType, data.SagaID,
 		)
 	}
