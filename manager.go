@@ -17,7 +17,7 @@ import (
 )
 
 type SagaManager interface {
-	create(data SagaData) error
+	create(uniqueId string, data SagaData) error
 	subscribeToReplyChannel()
 	deployProcess(path string) error
 	registerJobWorkers() error
@@ -51,11 +51,11 @@ type sagaManager struct {
 	sagaCommandProducer    *SagaCommandProducer
 }
 
-func (sm *sagaManager) create(data SagaData) error {
+func (sm *sagaManager) create(uniqueId string, data SagaData) error {
 	dataSerd := data.Marshal()
 
 	sagaInstance := NewSagaInstance(
-		"", sm.getSagaType(), "started", "",
+		uniqueId, sm.getSagaType(), "started", "",
 		dataSerd, map[string]string{},
 	)
 
@@ -63,7 +63,7 @@ func (sm *sagaManager) create(data SagaData) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to store sagaInstance of %s saga\n", sm.getSagaType())
 	}
-	sagaInstance.SetID(sagaID)
+	// sagaInstance.SetID(sagaID)
 
 	// go sm.saga.OnStarting(sagaID, dataSerd)
 
@@ -71,6 +71,7 @@ func (sm *sagaManager) create(data SagaData) error {
 		MessageName(sm.getSagaType()).
 		CorrelationKey(sagaID).
 		VariablesFromMap(map[string]interface{}{
+			ZB_SAGO_KEY:  buildSagoKey(sm.getSagaType(), sagaID),
 			ZB_SAGA_ID:   sagaID,
 			ZB_SAGA_TYPE: sm.getSagaType(),
 		})
@@ -171,12 +172,9 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 	}
 
 	// send complete command to zb
-	_, err = sm.zb.NewCompleteJobCommand().JobKey(jobKey).Send(context.Background())
-	/* if err != nil {
-		log.Printf("failed to create %s:%s job complete command\nerr: %v\n", jobType, jobKey, err)
-		return
-	}
-	_, err = req.Send(context.Background()) */
+	_, err = sm.zb.NewCompleteJobCommand().
+		JobKey(jobKey).Send(context.Background())
+
 	if err != nil {
 		log.Printf("failed to send %s:%d job complete request\nerr: %v\n", jobType, jobKey, err)
 		return
@@ -265,7 +263,7 @@ func (sm *sagaManager) handleReply(msg sagomsg.Message) {
 
 	err = zeebe.PublishMessage(
 		context.Background(),
-		sm.zb, replyCmdName, sagaID,
+		sm.zb, replyCmdName, buildSagoKey(sagaType, sagaID),
 		map[string]interface{}{
 			stepName + "Result": result,
 		},
@@ -291,7 +289,7 @@ func (sm *sagaManager) makeSagaReplyChannel() string {
 func (sm *sagaManager) getStateDefinition() (SagaDefinition, error) {
 	def := sm.saga.SagaDefinition()
 	if def == nil {
-		return nil, errors.New("state machine should not be nil")
+		return nil, errors.New("saga definition should not be nil")
 	}
 	return def, nil
 }
