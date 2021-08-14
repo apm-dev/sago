@@ -3,13 +3,13 @@ package sago
 type ParticipantInvocationStepBuilder struct {
 	parent              *SagaDefinitionBuilder
 	action              *ParticipantInvocation
-	actionReplyHandlers map[string]func(data, msg []byte, successful bool) SagaData
+	actionReplyHandlers map[string]func(data, msg []byte, successful bool) (SagaData, error)
 }
 
 func NewParticipantInvocationStepBuilder(parent *SagaDefinitionBuilder) *ParticipantInvocationStepBuilder {
 	return &ParticipantInvocationStepBuilder{
 		parent:              parent,
-		actionReplyHandlers: make(map[string]func(data, msg []byte, successful bool) SagaData),
+		actionReplyHandlers: make(map[string]func(data, msg []byte, successful bool) (SagaData, error)),
 	}
 }
 
@@ -18,7 +18,7 @@ func (b *ParticipantInvocationStepBuilder) withAction(cmdEndpoint CommandEndpoin
 	return b
 }
 
-func (b *ParticipantInvocationStepBuilder) OnReply(handler func(data, msg []byte, successful bool) SagaData) *ParticipantInvocationStepBuilder {
+func (b *ParticipantInvocationStepBuilder) OnReply(handler func(data, msg []byte, successful bool) (SagaData, error)) *ParticipantInvocationStepBuilder {
 	// b.actionReplyHandlers[common.StructName(reply)] = handler
 	b.actionReplyHandlers[b.action.cmdEndpoint.CommandName()+"Reply"] = handler
 	return b

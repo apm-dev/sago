@@ -43,7 +43,7 @@ func NewMessageConsumerKafkaImpl(brokers []string) MessageConsumer {
 	}
 }
 
-func (c *MessageConsumerKafkaImpl) Subscribe(subscriberID string, channels []string, handler func(m Message)) MessageSubscription {
+func (c *MessageConsumerKafkaImpl) Subscribe(subscriberID string, channels []string, handler func(m Message) error) MessageSubscription {
 	for _, ch := range channels {
 		if ch == "" {
 			log.Println("could not subscribe on empty channel")
@@ -63,7 +63,11 @@ func (c *MessageConsumerKafkaImpl) Subscribe(subscriberID string, channels []str
 			for msg := range msgs {
 				log.Printf("message received, id: %s", msg.UUID)
 				// TODO: store msg in db and detect message duplication
-				handler(NewMessage(msg.Payload, msg.Metadata))
+				err := handler(NewMessage(msg.Payload, msg.Metadata))
+				if err != nil {
+					msg.Nack()
+					continue
+				}
 				msg.Ack()
 			}
 			log.Println(ch, "kafka subscribing closed")

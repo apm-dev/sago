@@ -1,8 +1,10 @@
 package sagocmd
 
 import (
-	"git.coryptex.com/lib/sago/sagomsg"
 	"log"
+
+	"git.coryptex.com/lib/sago/sagomsg"
+	"github.com/pkg/errors"
 )
 
 type CommandDispatcher struct {
@@ -31,21 +33,20 @@ func (d *CommandDispatcher) Initialize() {
 	)
 }
 
-func (d *CommandDispatcher) handleMessage(msg sagomsg.Message) {
-	log.Printf("received message %s %v\n", d.cmdDispatcherID, msg)
+func (d *CommandDispatcher) handleMessage(msg sagomsg.Message) error {
+	const op string = "sagocmd.command_dispatcher.handleMessage"
+	log.Printf("%s: received message %s %v\n", op, d.cmdDispatcherID, msg)
 
 	cmdHandler := d.cmdHandlers.FindTargetMethod(msg)
 	if cmdHandler == nil {
-		log.Printf("no method for %v\n", msg)
-		return
+		return errors.Errorf("%s: no method for %v", op, msg)
 	}
 
 	cmdHandlerParams := NewCommandHandlerParams(msg)
 
 	msgid, err := msg.ID()
 	if err != nil {
-		log.Printf("message doesn't have ID, msg: %v\b", msg)
-		return
+		return errors.Wrapf(err, "%s: message doesn't have ID, msg: %v", op, msg)
 	}
 
 	cmdmsg := NewCommandMessage(
@@ -56,15 +57,14 @@ func (d *CommandDispatcher) handleMessage(msg sagomsg.Message) {
 	replyMsg := cmdHandler.InvokeHandler(cmdmsg)
 
 	if cmdHandlerParams.DefaultReplyChannel() == "" {
-		log.Printf(
-			"no %s header in command message so there is no destination to send reply to",
-			REPLY_TO)
-		return
+		return errors.Errorf(
+			"%s: no %s header in command message so there is no destination to send reply to",
+			op, REPLY_TO,
+		)
 	}
 
 	if replyMsg == nil {
-		log.Printf("nil reply - not publishing - command message: %v\n", cmdmsg)
-		return
+		return errors.Errorf("%s: nil reply - not publishing - command message: %v", op, cmdmsg)
 	}
 	err = d.sendReply(
 		cmdHandlerParams.CorrelationHeaders(),
@@ -72,16 +72,22 @@ func (d *CommandDispatcher) handleMessage(msg sagomsg.Message) {
 		cmdHandlerParams.DefaultReplyChannel(),
 	)
 	if err != nil {
-		log.Printf("failed to send reply ->\nreply:%v\nerr: %v\n", replyMsg, err)
-		return
+		return errors.Wrapf(err, op)
 	}
+	return nil
 }
 
 func (d *CommandDispatcher) sendReply(headers map[string]string, reply sagomsg.Message, channel string) error {
-	return d.mp.Send(
+	const op string = "sagocmd.command_dispatcher.sendReply"
+
+	err := d.mp.Send(
 		channel,
 		sagomsg.WithMessage(reply).
 			WithExtraHeaders("", headers).
 			Build(),
 	)
+	if err != nil {
+		return errors.Wrapf(err, op)
+	}
+	return nil
 }
