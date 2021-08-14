@@ -189,57 +189,58 @@ func (sm *sagaManager) subscribeToReplyChannel() {
 	)
 }
 
-func (sm *sagaManager) handleMessage(msg sagomsg.Message) {
+func (sm *sagaManager) handleMessage(msg sagomsg.Message) error {
+	const op string = "sago.manager.handleMessage"
 	// TODO log
 	log.Printf("handle message invoked %+v", msg)
 	if msg.HasHeader(REPLY_SAGA_ID) {
-		sm.handleReply(msg)
-	} else {
-		// TODO log
-		log.Printf("handleMessage doesn't know what to do with: %+v", msg)
-	}
-}
-
-func (sm *sagaManager) handleReply(msg sagomsg.Message) {
-	// TODO implement
-	if !sm.isReplyForThisSagaType(msg) {
-		return
+		err := sm.handleReply(msg)
+		if err != nil {
+			log.Println(errors.Wrap(err, op))
+			return err
+		}
+		return nil
 	}
 	// TODO log
-	log.Printf("Handle reply %+v", msg)
+	err := errors.Errorf("%s: handleMessage doesn't know what to do with: %+v", op, msg)
+	log.Println(err)
+	return err
+}
+
+func (sm *sagaManager) handleReply(msg sagomsg.Message) error {
+	const op string = "sago.manager.handleReply"
+	// TODO implement
+	if !sm.isReplyForThisSagaType(msg) {
+		return errors.Errorf("%s: reply %v is not for %s saga type.", op, msg, sm.getSagaType())
+	}
+	// TODO log
+	log.Printf("%s: Handle reply %+v", op, msg)
 	// header existence checked before
 	sagaID, _ := msg.RequiredHeader(REPLY_SAGA_ID)
 	sagaType, _ := msg.RequiredHeader(REPLY_SAGA_TYPE)
 	replyCmdName, err := msg.RequiredHeader(sagocmd.REPLY_TYPE)
 	if err != nil {
-		log.Printf("handleReply doesn't know what to do with %+v msg without %s header\n",
-			msg, sagocmd.REPLY_TYPE)
-		return
+		return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
 	}
 
 	sagaInstance, err := sm.sagaInstanceRepository.Find(sagaType, sagaID)
 	if err != nil {
-		log.Printf("failed to get sagaInstance of %s:%s saga\nerr: %v\n",
-			sagaID, sagaType, err)
-		return
+		return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
 	}
 
 	log.Printf("Current state of %s:%s saga is %s", sagaType, sagaID, sagaInstance.StateName())
 
 	sagaDefinition, err := sm.getStateDefinition()
 	if err != nil {
-		log.Printf(
-			"failed to get definition of %s:%s saga\nerr: %v\n",
-			sagaID, sagaType, err,
-		)
-		return
+		return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
 	}
 
 	stepName := strings.TrimSuffix(replyCmdName, "Reply")
 	step := sagaDefinition.step(stepName)
 	if step == nil {
-		log.Printf("there is no %s step defined for %s:%s saga\n", stepName, sagaType, sagaID)
-		return
+		return errors.Errorf("%s.%s:%s: there is no %s step defined",
+			op, sagaType, sagaID, stepName,
+		)
 	}
 
 	result := "failed"
@@ -251,13 +252,14 @@ func (sm *sagaManager) handleReply(msg sagomsg.Message) {
 	// call business logic callback to handle reply
 	handler := step.GetReplyHandler(msg)
 	if handler != nil {
-		sagaData := handler(sagaInstance.SerializedSagaData(), msg.Payload(), isSuccessful)
+		sagaData, err := handler(sagaInstance.SerializedSagaData(), msg.Payload(), isSuccessful)
+		if err != nil {
+			return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
+		}
 		sagaInstance.SetSerializedSagaData(sagaData.Marshal())
 		err = sm.sagaInstanceRepository.Update(*sagaInstance)
 		if err != nil {
-			log.Printf("failed to update sagaInstance of %s:%s saga\nerr: %v\n",
-				sagaID, sagaType, err)
-			return
+			return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
 		}
 	}
 
@@ -270,12 +272,9 @@ func (sm *sagaManager) handleReply(msg sagomsg.Message) {
 	)
 
 	if err != nil {
-		log.Printf(
-			"failed to publish zb message %s of saga %s:%s\nerr: %v\n",
-			replyCmdName, sagaType, sagaID, err,
-		)
-		return
+		return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
 	}
+	return nil
 }
 
 func (sm *sagaManager) getSagaType() string {
