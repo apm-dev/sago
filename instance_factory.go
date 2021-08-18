@@ -27,14 +27,14 @@ func NewSagaInstanceFactory(smf *SagaManagerFactory, sagas []Saga, bpmnPath stri
 	return &sif, nil
 }
 
-func (sif *SagaInstanceFactory) Create(uniqueId string, saga Saga, data SagaData) error {
+func (sif *SagaInstanceFactory) Create(uniqueId string, saga Saga, data SagaData, extVars map[string]interface{}) error {
 	sif.sagaManagersLock.RLock()
 	defer sif.sagaManagersLock.RUnlock()
 	sagaManager := sif.sagaManagers[saga]
 	if sagaManager == nil {
 		return errors.Errorf("there is no SagaManager registered for %s", saga.SagaType())
 	}
-	return sagaManager.create(uniqueId, data)
+	return sagaManager.create(uniqueId, data, extVars)
 }
 
 func (sif *SagaInstanceFactory) makeSagaManager(smf *SagaManagerFactory, saga Saga, bpmnPath string) (SagaManager, error) {

@@ -44,6 +44,6 @@ func (stp *ParticipantInvocationStep) GetReplyHandler(msg sagomsg.Message) func(
 	return NewRemoteStepOutcome([]sagocmd.Command{cmd})
 } */
 
-func (stp *ParticipantInvocationStep) Command(sagaData []byte) sagocmd.Command {
-	return stp.getParticipantInvocation().makeCommandToSend(sagaData)
+func (stp *ParticipantInvocationStep) Command(sagaData []byte, vars map[string]interface{}) sagocmd.Command {
+	return stp.getParticipantInvocation().makeCommandToSend(sagaData, vars)
 }

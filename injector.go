@@ -35,6 +35,7 @@ func (i *injector) InjectEventToFlow(uniqueId string, s Saga, e Event) error {
 		TimeToLive(e.TTL)
 	// set variables of message if there was any
 	if e.Vars != nil && len(e.Vars) > 0 {
+		removeReservedVariableKeys(e.Vars)
 		var err error
 		req, err = req.VariablesFromMap(e.Vars)
 		if err != nil {

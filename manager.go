@@ -17,7 +17,7 @@ import (
 )
 
 type SagaManager interface {
-	create(uniqueId string, data SagaData) error
+	create(uniqueId string, data SagaData, extVars map[string]interface{}) error
 	subscribeToReplyChannel()
 	deployProcess(path string) error
 	registerJobWorkers() error
@@ -51,7 +51,7 @@ type sagaManager struct {
 	sagaCommandProducer    *SagaCommandProducer
 }
 
-func (sm *sagaManager) create(uniqueId string, data SagaData) error {
+func (sm *sagaManager) create(uniqueId string, data SagaData, vars map[string]interface{}) error {
 	dataSerd := data.Marshal()
 
 	sagaInstance := NewSagaInstance(
@@ -67,14 +67,19 @@ func (sm *sagaManager) create(uniqueId string, data SagaData) error {
 
 	// go sm.saga.OnStarting(sagaID, dataSerd)
 
+	// prepare zeebe flow initial variables
+	if vars == nil {
+		vars = make(map[string]interface{})
+	}
+	removeReservedVariableKeys(vars)
+	vars[ZB_SAGO_KEY] = buildSagoKey(sm.getSagaType(), sagaID)
+	vars[ZB_SAGA_ID] = sagaID
+	vars[ZB_SAGA_TYPE] = sm.getSagaType()
+
 	req, err := sm.zb.NewPublishMessageCommand().
 		MessageName(sm.getSagaType()).
-		CorrelationKey(sagaID).
-		VariablesFromMap(map[string]interface{}{
-			ZB_SAGO_KEY:  buildSagoKey(sm.getSagaType(), sagaID),
-			ZB_SAGA_ID:   sagaID,
-			ZB_SAGA_TYPE: sm.getSagaType(),
-		})
+		CorrelationKey(buildSagoKey(sm.getSagaType(), sagaID)).
+		VariablesFromMap(vars)
 	if err != nil {
 		return errors.Wrapf(err,
 			"failed to create start saga message %s:%s\n", sm.getSagaType(), sagaID)
@@ -147,8 +152,15 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 		return
 	}
 
+	// copy variables and delete reserved keys
+	vars := make(map[string]interface{})
+	for k, v := range variables {
+		vars[k] = v
+	}
+	removeReservedVariableKeys(vars)
+
 	// get command of this step and send it to related participant
-	cmd := step.Command(instance.SerializedSagaData())
+	cmd := step.Command(instance.SerializedSagaData(), vars)
 	lastReqID, err := sm.sagaCommandProducer.sendCommands(
 		sm.getSagaType(), sagaID,
 		sm.makeSagaReplyChannel(),

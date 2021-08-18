@@ -1,18 +1,19 @@
 package sago
 
 import (
-	"git.coryptex.com/lib/sago/sagocmd"
-	"git.coryptex.com/lib/sago/sagomsg"
 	"log"
 	"strings"
+
+	"git.coryptex.com/lib/sago/sagocmd"
+	"git.coryptex.com/lib/sago/sagomsg"
 )
 
 type ParticipantInvocation struct {
 	cmdEndpoint CommandEndpoint
-	cmdProvider func(data []byte) []byte
+	cmdProvider func(data []byte, vars map[string]interface{}) []byte
 }
 
-func NewParticipantInvocation(cmdEndpoint CommandEndpoint, cmdProvider func(data []byte) []byte) *ParticipantInvocation {
+func NewParticipantInvocation(cmdEndpoint CommandEndpoint, cmdProvider func(data []byte, vars map[string]interface{}) []byte) *ParticipantInvocation {
 	return &ParticipantInvocation{cmdEndpoint, cmdProvider}
 }
 
@@ -25,11 +26,11 @@ func (pi *ParticipantInvocation) isSuccessfulReply(msg sagomsg.Message) bool {
 	return strings.EqualFold(val, string(sagocmd.SUCCESS))
 }
 
-func (pi *ParticipantInvocation) makeCommandToSend(sagaData []byte) sagocmd.Command {
+func (pi *ParticipantInvocation) makeCommandToSend(sagaData []byte, vars map[string]interface{}) sagocmd.Command {
 	return NewCommand(
 		pi.cmdEndpoint.CommandName(),
 		pi.cmdEndpoint.Channel(),
-		pi.cmdProvider(sagaData),
+		pi.cmdProvider(sagaData, vars),
 		map[string]string{},
 	)
 }
