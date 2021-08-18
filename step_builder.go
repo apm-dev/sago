@@ -8,6 +8,6 @@ func NewStepBuilder(sdb *SagaDefinitionBuilder) *StepBuilder {
 	return &StepBuilder{sdb}
 }
 
-func (b *StepBuilder) InvokeParticipant(ce CommandEndpoint, cmdProvider func(sagaData []byte) []byte) *ParticipantInvocationStepBuilder {
+func (b *StepBuilder) InvokeParticipant(ce CommandEndpoint, cmdProvider func(sagaData []byte, vars map[string]interface{}) []byte) *ParticipantInvocationStepBuilder {
 	return NewParticipantInvocationStepBuilder(b.parent).withAction(ce, cmdProvider)
 }
