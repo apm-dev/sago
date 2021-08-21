@@ -13,7 +13,7 @@ func NewParticipantInvocationStepBuilder(parent *SagaDefinitionBuilder) *Partici
 	}
 }
 
-func (b *ParticipantInvocationStepBuilder) withAction(cmdEndpoint CommandEndpoint, cmdProvider func([]byte, map[string]interface{}) []byte) *ParticipantInvocationStepBuilder {
+func (b *ParticipantInvocationStepBuilder) withAction(cmdEndpoint CommandEndpoint, cmdProvider func([]byte, map[string]interface{}) ([]byte, error)) *ParticipantInvocationStepBuilder {
 	b.action = NewParticipantInvocation(cmdEndpoint, cmdProvider)
 	return b
 }

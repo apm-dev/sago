@@ -5,6 +5,7 @@ import (
 
 	"git.coryptex.com/lib/sago/sagocmd"
 	"git.coryptex.com/lib/sago/sagomsg"
+	"github.com/pkg/errors"
 )
 
 type ParticipantInvocationStep struct {
@@ -44,6 +45,12 @@ func (stp *ParticipantInvocationStep) GetReplyHandler(msg sagomsg.Message) func(
 	return NewRemoteStepOutcome([]sagocmd.Command{cmd})
 } */
 
-func (stp *ParticipantInvocationStep) Command(sagaData []byte, vars map[string]interface{}) sagocmd.Command {
-	return stp.getParticipantInvocation().makeCommandToSend(sagaData, vars)
+func (stp *ParticipantInvocationStep) Command(sagaData []byte, vars map[string]interface{}) (sagocmd.Command, error) {
+	const op string = "sago.participant_invocation_step.Command"
+	
+	cmd, err := stp.getParticipantInvocation().makeCommandToSend(sagaData, vars)
+	if err != nil {
+		return nil, errors.Wrap(err, op)
+	}
+	return cmd, nil
 }

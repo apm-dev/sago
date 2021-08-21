@@ -196,7 +196,14 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 	removeReservedVariableKeys(vars)
 
 	// get command of this step and send it to related participant
-	cmd := step.Command(instance.SerializedSagaData(), vars)
+	cmd, err := step.Command(instance.SerializedSagaData(), vars)
+	if err != nil {
+		msg := fmt.Sprintf("%s: failed to get step's command\n%v", op, err)
+		
+		sagolog.Log(sagolog.ERROR, msg)
+		zeebe.FailJob(client, job, msg)
+		return
+	}
 	lastReqID, err := sm.sagaCommandProducer.sendCommands(
 		sm.getSagaType(), sagaID,
 		sm.makeSagaReplyChannel(),
