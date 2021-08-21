@@ -29,7 +29,7 @@ func NewMessageProducerKafkaImpl(brokers []string) (MessageProducer, error) {
 
 func (p *MessageProducerKafkaImpl) Send(destination string, msg Message) error {
 	prepareMessageHeaders(msg, destination)
-	// TODO use uuid
+	
 	id := watermill.NewUUID()
 	msg.SetHeader(ID, id)
 

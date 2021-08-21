@@ -2,8 +2,9 @@ package sagomsg
 
 import (
 	"context"
-	"log"
+	"fmt"
 
+	"git.coryptex.com/lib/sago/sagolog"
 	"github.com/Shopify/sarama"
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
@@ -44,33 +45,50 @@ func NewMessageConsumerKafkaImpl(brokers []string) MessageConsumer {
 }
 
 func (c *MessageConsumerKafkaImpl) Subscribe(subscriberID string, channels []string, handler func(m Message) error) MessageSubscription {
+	const op string = "sagomsg.consumer_kafka.Subscribe"
+
 	for _, ch := range channels {
 		if ch == "" {
-			log.Println("could not subscribe on empty channel")
+			sagolog.Log(sagolog.WARN,
+				fmt.Sprintf("%s: could not subscribe on empty channel name", op),
+			)
 			continue
 		}
-		log.Println("registering kafka subscriber for", ch)
+
+		sagolog.Log(sagolog.DEBUG,
+			fmt.Sprintf("%s: subscribing to %s channel", op, ch),
+		)
 
 		msgs, err := c.sub.Subscribe(context.Background(), ch)
 		if err != nil {
 			panic(errors.Wrapf(err,
-				"failed to subscribe on kafka topic %s, subscriberID: %s\nerr: %v\n",
-				ch, subscriberID, err,
+				"%s: failed to subscribe on topic %s, subscriberID: %s\nerr: %v",
+				op, ch, subscriberID, err,
 			))
 		}
 		go func(ch string) {
-			log.Println(ch, "kafka subscribing started")
 			for msg := range msgs {
-				log.Printf("message received, id: %s", msg.UUID)
+				sagolog.Log(sagolog.DEBUG,
+					fmt.Sprintf("%s: message %s:%s received", op, ch, msg.UUID),
+				)
 				// TODO: store msg in db and detect message duplication
 				err := handler(NewMessage(msg.Payload, msg.Metadata))
 				if err != nil {
+					sagolog.Log(sagolog.ERROR,
+						fmt.Sprintf("%s: failed to handle message %s:%s\n%v",
+							op, ch, msg.UUID, err),
+					)
 					msg.Nack()
 					continue
 				}
+				sagolog.Log(sagolog.DEBUG,
+					fmt.Sprintf("%s: sending ack for %s:%s message", op, ch, msg.UUID),
+				)
 				msg.Ack()
 			}
-			log.Println(ch, "kafka subscribing closed")
+			sagolog.Log(sagolog.DEBUG,
+				fmt.Sprintf("%s: stop subscribing on %s", op, ch),
+			)
 		}(ch)
 	}
 	return &KafkaSubscription{

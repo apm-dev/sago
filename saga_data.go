@@ -1,6 +1,6 @@
 package sago
 
 type SagaData interface {
-	Marshal() []byte
-	Unmarshal([]byte)
+	Marshal() ([]byte, error)
+	Unmarshal([]byte) error
 }
