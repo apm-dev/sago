@@ -75,12 +75,10 @@ func CreateProcessInstance(client zbc.Client, pid string, variables map[string]i
 }
 
 func FailJob(client worker.JobClient, job entities.Job, msg string) error {
-	log.Println(msg)
 	_, err := client.NewFailJobCommand().JobKey(job.GetKey()).Retries(job.Retries - 1).
 		ErrorMessage(msg).
 		Send(context.Background())
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	return nil

@@ -3,10 +3,10 @@ package sago
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"git.coryptex.com/lib/sago/sagocmd"
+	"git.coryptex.com/lib/sago/sagolog"
 	"git.coryptex.com/lib/sago/sagomsg"
 	"git.coryptex.com/lib/sago/zeebe"
 
@@ -52,7 +52,17 @@ type sagaManager struct {
 }
 
 func (sm *sagaManager) create(uniqueId string, data SagaData, vars map[string]interface{}) error {
-	dataSerd := data.Marshal()
+	const op string = "sago.manager.create"
+
+	sagolog.Log(sagolog.INFO, fmt.Sprintf(
+		"%s: creating %s:%s saga",
+		op, sm.getSagaType(), uniqueId,
+	))
+
+	dataSerd, err := data.Marshal()
+	if err != nil {
+		return errors.Wrapf(err, "%s: %s\n%+v", op, uniqueId, data)
+	}
 
 	sagaInstance := NewSagaInstance(
 		uniqueId, sm.getSagaType(), "started", "",
@@ -63,6 +73,7 @@ func (sm *sagaManager) create(uniqueId string, data SagaData, vars map[string]in
 	if err != nil {
 		return errors.Wrapf(err, "failed to store sagaInstance of %s saga\n", sm.getSagaType())
 	}
+	// do not need to set saga id because it's same as uniqueID
 	// sagaInstance.SetID(sagaID)
 
 	// go sm.saga.OnStarting(sagaID, dataSerd)
@@ -90,6 +101,11 @@ func (sm *sagaManager) create(uniqueId string, data SagaData, vars map[string]in
 		return errors.Wrapf(err,
 			"failed to send start saga message %s:%s\n", sm.getSagaType(), sagaID)
 	}
+
+	sagolog.Log(sagolog.INFO, fmt.Sprintf(
+		"saga instance %s:%s started",
+		sm.getSagaType(), sagaID,
+	))
 	return nil
 }
 
@@ -101,6 +117,7 @@ func (sm *sagaManager) deployProcess(path string) error {
 			path, sm.getSagaType(),
 		)
 	}
+	sagolog.Log(sagolog.DEBUG, fmt.Sprintf("%s process deployed", path))
 	return nil
 }
 
@@ -113,22 +130,32 @@ func (sm *sagaManager) registerJobWorkers() error {
 			sm.getSagaType(),
 		)
 	}
-	log.Println("start registering jobs")
+	sagolog.Log(sagolog.DEBUG, "start registering jobs")
 	for step := range def.stepsName() {
 		go sm.zb.NewJobWorker().JobType(step).Handler(sm.handleJob).Open()
-		log.Println("job registered for", step)
+		sagolog.Log(sagolog.DEBUG, fmt.Sprint("job registered for", step))
 	}
 	return nil
 }
 
 func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
+	const op string = "sago.manager.handleJob"
+
 	jobKey, jobType := job.GetKey(), job.GetType()
-	log.Printf("handle job %s:%d\n", jobType, jobKey)
+
+	sagolog.Log(sagolog.DEBUG,
+		fmt.Sprintf("%s: handling job %s:%d", op, jobType, jobKey),
+	)
 
 	variables, err := job.GetVariablesAsMap()
 	if err != nil {
-		zeebe.FailJob(client, job,
-			fmt.Sprintf("failed to get variables of job %s:%d\nerr: %v\n", jobType, jobKey, err))
+		msg := fmt.Sprintf(
+			"%s: failing job %s:%d, reason: failed to get variables of job\n%v",
+			op, jobType, jobKey, err,
+		)
+
+		sagolog.Log(sagolog.ERROR, msg)
+		zeebe.FailJob(client, job, msg)
 		return
 	}
 
@@ -136,9 +163,13 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 	sagaID := variables[ZB_SAGA_ID].(string)
 	instance, err := sm.sagaInstanceRepository.Find(sm.getSagaType(), sagaID)
 	if err != nil {
-		zeebe.FailJob(client, job,
-			fmt.Sprintf("failed to fetch instance from db of saga %s:%s to handle job %s:%d\nerr: %v",
-				sm.getSagaType(), sagaID, jobType, jobKey, err))
+		msg := fmt.Sprintf(
+			"%s: failing job %s:%d, reason: failed to get %s:%s saga instance\n%v",
+			op, jobType, jobKey, sm.getSagaType(), sagaID, err,
+		)
+
+		sagolog.Log(sagolog.ERROR, msg)
+		zeebe.FailJob(client, job, msg)
 		return
 	}
 	// err has been checked in registerJobWorkers step
@@ -147,8 +178,13 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 	// get saga step related to this job
 	step := def.step(jobType)
 	if step == nil {
-		zeebe.FailJob(client, job,
-			fmt.Sprintf("there is no step for %s:%d job\n", jobType, jobKey))
+		msg := fmt.Sprintf(
+			"%s: failing job %s:%d, reason: saga step is nil",
+			op, jobType, jobKey,
+		)
+
+		sagolog.Log(sagolog.ERROR, msg)
+		zeebe.FailJob(client, job, msg)
 		return
 	}
 
@@ -167,8 +203,13 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 		[]sagocmd.Command{cmd},
 	)
 	if err != nil {
-		zeebe.FailJob(client, job,
-			fmt.Sprintf("failed to handle job %s:%d\nerr: %v\n", jobType, jobKey, err))
+		msg := fmt.Sprintf(
+			"%s: failing job %s:%d, reason: failed to send commands\n%v",
+			op, jobType, jobKey, err,
+		)
+
+		sagolog.Log(sagolog.ERROR, msg)
+		zeebe.FailJob(client, job, msg)
 		return
 	}
 
@@ -177,9 +218,13 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 	instance.SetStateName(jobType)
 	err = sm.sagaInstanceRepository.Update(*instance)
 	if err != nil {
-		zeebe.FailJob(client, job,
-			fmt.Sprintf("failed to update sagaInstance of %s:%s saga for %s:%d job\nerr: %v\n",
-				sm.getSagaType(), sagaID, jobType, jobKey, err))
+		msg := fmt.Sprintf(
+			"%s: failing job %s:%d, reason: failed to update %s:%s saga instance\n%v",
+			op, jobType, jobKey, sm.getSagaType(), sagaID, err,
+		)
+
+		sagolog.Log(sagolog.ERROR, msg)
+		zeebe.FailJob(client, job, msg)
 		return
 	}
 
@@ -188,9 +233,18 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 		JobKey(jobKey).Send(context.Background())
 
 	if err != nil {
-		log.Printf("failed to send %s:%d job complete request\nerr: %v\n", jobType, jobKey, err)
+		sagolog.Log(sagolog.ERROR,
+			fmt.Sprintf(
+				"%s: failing job %s:%d, reason: failed to send complete job command\n%v",
+				op, jobType, jobKey, err,
+			),
+		)
 		return
 	}
+
+	sagolog.Log(sagolog.DEBUG,
+		fmt.Sprintf("%s: job %s:%d completed", op, jobType, jobKey),
+	)
 }
 
 func (sm *sagaManager) subscribeToReplyChannel() {
@@ -203,30 +257,27 @@ func (sm *sagaManager) subscribeToReplyChannel() {
 
 func (sm *sagaManager) handleMessage(msg sagomsg.Message) error {
 	const op string = "sago.manager.handleMessage"
-	// TODO log
-	log.Printf("handle message invoked %+v", msg)
+
+	sagolog.Log(sagolog.DEBUG, fmt.Sprintf("%s: handling message:\n%+v", op, msg))
+
 	if msg.HasHeader(REPLY_SAGA_ID) {
 		err := sm.handleReply(msg)
 		if err != nil {
-			log.Println(errors.Wrap(err, op))
-			return err
+			return errors.Wrap(err, op)
 		}
 		return nil
 	}
-	// TODO log
-	err := errors.Errorf("%s: handleMessage doesn't know what to do with: %+v", op, msg)
-	log.Println(err)
-	return err
+	return errors.Errorf("%s: doesn't know what to do with:\n%+v", op, msg)
 }
 
 func (sm *sagaManager) handleReply(msg sagomsg.Message) error {
 	const op string = "sago.manager.handleReply"
-	// TODO implement
+
 	if !sm.isReplyForThisSagaType(msg) {
 		return errors.Errorf("%s: reply %v is not for %s saga type.", op, msg, sm.getSagaType())
 	}
-	// TODO log
-	log.Printf("%s: Handle reply %+v", op, msg)
+
+	sagolog.Log(sagolog.DEBUG, fmt.Sprintf("%s: handling reply\n%+v", op, msg))
 	// header existence checked before
 	sagaID, _ := msg.RequiredHeader(REPLY_SAGA_ID)
 	sagaType, _ := msg.RequiredHeader(REPLY_SAGA_TYPE)
@@ -240,7 +291,10 @@ func (sm *sagaManager) handleReply(msg sagomsg.Message) error {
 		return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
 	}
 
-	log.Printf("Current state of %s:%s saga is %s", sagaType, sagaID, sagaInstance.StateName())
+	sagolog.Log(sagolog.DEBUG, fmt.Sprintf(
+		"current state of %s:%s saga is %s",
+		sagaType, sagaID, sagaInstance.StateName(),
+	))
 
 	sagaDefinition, err := sm.getStateDefinition()
 	if err != nil {
@@ -261,6 +315,12 @@ func (sm *sagaManager) handleReply(msg sagomsg.Message) error {
 		result = "success"
 	}
 
+	sagolog.Log(sagolog.DEBUG,
+		fmt.Sprintf("%s %s.%s: %s result was: %s",
+			op, sagaType, sagaID, replyCmdName, result,
+		),
+	)
+
 	// call business logic callback to handle reply
 	handler := step.GetReplyHandler(msg)
 	if handler != nil {
@@ -268,7 +328,11 @@ func (sm *sagaManager) handleReply(msg sagomsg.Message) error {
 		if err != nil {
 			return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
 		}
-		sagaInstance.SetSerializedSagaData(sagaData.Marshal())
+		data, err := sagaData.Marshal()
+		if err != nil {
+			return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
+		}
+		sagaInstance.SetSerializedSagaData(data)
 		err = sm.sagaInstanceRepository.Update(*sagaInstance)
 		if err != nil {
 			return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
@@ -284,8 +348,14 @@ func (sm *sagaManager) handleReply(msg sagomsg.Message) error {
 	)
 
 	if err != nil {
-		return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
+		return errors.Wrapf(err, "%s %s:%s", op, sagaType, sagaID)
 	}
+
+	sagolog.Log(sagolog.DEBUG,
+		fmt.Sprintf("%s %s.%s: %s handled",
+			op, sagaType, sagaID, replyCmdName,
+		),
+	)
 	return nil
 }
 
