@@ -9,6 +9,7 @@ require (
 	github.com/camunda-cloud/zeebe/clients/go v1.1.2
 	github.com/fatih/color v1.12.0
 	github.com/pkg/errors v0.9.1
+	google.golang.org/protobuf v1.26.0
 	gorm.io/driver/postgres v1.1.0
 	gorm.io/gorm v1.21.12
 )

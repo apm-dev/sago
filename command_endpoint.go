@@ -1,17 +1,20 @@
 package sago
 
-import "git.coryptex.com/lib/sago/common"
+import (
+	"git.coryptex.com/lib/sago/common"
+	"google.golang.org/protobuf/proto"
+)
 
 type CommandEndpoint struct {
-	command interface{}
+	command proto.Message
 	channel string
 }
 
-func NewCommandEndpoint(cmd interface{}, channel string) CommandEndpoint {
+func NewCommandEndpoint(cmd proto.Message, channel string) CommandEndpoint {
 	return CommandEndpoint{cmd, channel}
 }
 
-func (c *CommandEndpoint) Command() interface{} {
+func (c *CommandEndpoint) Command() proto.Message {
 	return c.command
 }
 

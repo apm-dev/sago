@@ -1,5 +1,7 @@
 package sago
 
+import "google.golang.org/protobuf/proto"
+
 type ParticipantInvocationStepBuilder struct {
 	parent              *SagaDefinitionBuilder
 	action              *ParticipantInvocation
@@ -13,7 +15,7 @@ func NewParticipantInvocationStepBuilder(parent *SagaDefinitionBuilder) *Partici
 	}
 }
 
-func (b *ParticipantInvocationStepBuilder) withAction(cmdEndpoint CommandEndpoint, cmdProvider func([]byte, map[string]interface{}) ([]byte, error)) *ParticipantInvocationStepBuilder {
+func (b *ParticipantInvocationStepBuilder) withAction(cmdEndpoint CommandEndpoint, cmdProvider func([]byte, map[string]interface{}) (proto.Message, error)) *ParticipantInvocationStepBuilder {
 	b.action = NewParticipantInvocation(cmdEndpoint, cmdProvider)
 	return b
 }
