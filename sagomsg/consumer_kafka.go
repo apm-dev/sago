@@ -12,7 +12,6 @@ import (
 )
 
 var (
-	// TODO: log
 	logger = watermill.NewStdLogger(false, false)
 )
 

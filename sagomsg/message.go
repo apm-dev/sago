@@ -54,7 +54,7 @@ func (m *message) Header(name string) string {
 func (m *message) RequiredHeader(name string) (string, error) {
 	val, ok := m.headers[name]
 	if !ok {
-		return "", errors.Errorf("No such header: %s in this message %v", name, m)
+		return "", errors.Errorf("there is no %s header in message %+v", name, m)
 	}
 	return val, nil
 }

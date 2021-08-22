@@ -1,10 +1,11 @@
 package sago
 
 import (
-	"log"
+	"fmt"
 	"strings"
 
 	"git.coryptex.com/lib/sago/sagocmd"
+	"git.coryptex.com/lib/sago/sagolog"
 	"git.coryptex.com/lib/sago/sagomsg"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
@@ -20,9 +21,12 @@ func NewParticipantInvocation(cmdEndpoint CommandEndpoint, cmdProvider func(data
 }
 
 func (pi *ParticipantInvocation) isSuccessfulReply(msg sagomsg.Message) bool {
+	const op string = "sago.participant_invocation.isSuccessfulReply"
 	val, err := msg.RequiredHeader(sagocmd.REPLY_OUTCOME)
 	if err != nil {
-		log.Printf("failed to check message successfulness\nmsg: %v\n", msg)
+		sagolog.Log(sagolog.WARN,
+			fmt.Sprintf("%s: %v", op, err),
+		)
 		return false
 	}
 	return strings.EqualFold(val, string(sagocmd.SUCCESS))
@@ -39,7 +43,7 @@ func (pi *ParticipantInvocation) makeCommandToSend(sagaData []byte, vars map[str
 	if err != nil {
 		return nil, errors.Wrap(err, op)
 	}
-	
+
 	return NewCommand(
 		pi.cmdEndpoint.CommandName(),
 		pi.cmdEndpoint.Channel(),
