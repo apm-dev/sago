@@ -1,9 +1,6 @@
 package sagocmd
 
 import (
-	"fmt"
-
-	"git.coryptex.com/lib/sago/sagolog"
 	"git.coryptex.com/lib/sago/sagomsg"
 	"github.com/pkg/errors"
 )
@@ -36,10 +33,6 @@ func (d *CommandDispatcher) Initialize() {
 
 func (d *CommandDispatcher) handleMessage(msg sagomsg.Message) error {
 	const op string = "sagocmd.command_dispatcher.handleMessage"
-
-	sagolog.Log(sagolog.DEBUG,
-		fmt.Sprintf("%s: message received %s %v", op, d.cmdDispatcherID, msg),
-	)
 
 	cmdHandler := d.cmdHandlers.FindTargetMethod(msg)
 	if cmdHandler == nil {

@@ -265,7 +265,7 @@ func (sm *sagaManager) subscribeToReplyChannel() {
 func (sm *sagaManager) handleMessage(msg sagomsg.Message) error {
 	const op string = "sago.manager.handleMessage"
 
-	sagolog.Log(sagolog.DEBUG, fmt.Sprintf("%s: handling message:\n%+v", op, msg))
+	sagolog.Log(sagolog.DEBUG, fmt.Sprintf("%s: handling message with headers: %v", op, msg.Headers()))
 
 	if msg.HasHeader(REPLY_SAGA_ID) {
 		err := sm.handleReply(msg)
@@ -274,17 +274,16 @@ func (sm *sagaManager) handleMessage(msg sagomsg.Message) error {
 		}
 		return nil
 	}
-	return errors.Errorf("%s: doesn't know what to do with:\n%+v", op, msg)
+	return errors.Errorf("%s: message does not have %s header", op, REPLY_SAGA_ID)
 }
 
 func (sm *sagaManager) handleReply(msg sagomsg.Message) error {
 	const op string = "sago.manager.handleReply"
 
 	if !sm.isReplyForThisSagaType(msg) {
-		return errors.Errorf("%s: reply %v is not for %s saga type.", op, msg, sm.getSagaType())
+		return errors.Errorf("%s: reply %s is not for %s saga type.", op, msg.Header(REPLY_SAGA_TYPE), sm.getSagaType())
 	}
 
-	sagolog.Log(sagolog.DEBUG, fmt.Sprintf("%s: handling reply\n%+v", op, msg))
 	// header existence checked before
 	sagaID, _ := msg.RequiredHeader(REPLY_SAGA_ID)
 	sagaType, _ := msg.RequiredHeader(REPLY_SAGA_TYPE)
@@ -292,6 +291,8 @@ func (sm *sagaManager) handleReply(msg sagomsg.Message) error {
 	if err != nil {
 		return errors.Wrapf(err, "%s.%s:%s", op, sagaType, sagaID)
 	}
+
+	sagolog.Log(sagolog.DEBUG, fmt.Sprintf("%s: handling reply: %s", op, replyCmdName))
 
 	sagaInstance, err := sm.sagaInstanceRepository.Find(sagaType, sagaID)
 	if err != nil {
