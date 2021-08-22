@@ -1,9 +1,10 @@
 package sagocmd
 
 import (
-	"log"
+	"fmt"
 	"strings"
 
+	"git.coryptex.com/lib/sago/sagolog"
 	"git.coryptex.com/lib/sago/sagomsg"
 )
 
@@ -42,9 +43,10 @@ func (h *CommandHandler) Handles(msg sagomsg.Message) bool {
 }
 
 func (h *CommandHandler) commandTypeMatches(msg sagomsg.Message) bool {
+	const op string = "sagocmd.command_handler.commandTypeMatches"
 	cmdType, err := msg.RequiredHeader(COMMAND_TYPE)
 	if err != nil {
-		log.Println("there is no", cmdType, "header in message to handle command")
+		sagolog.Log(sagolog.WARN, fmt.Sprintf("%s: %v", op, err))
 		return false
 	}
 	return strings.EqualFold(h.cmdType, cmdType)

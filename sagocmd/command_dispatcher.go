@@ -1,8 +1,9 @@
 package sagocmd
 
 import (
-	"log"
+	"fmt"
 
+	"git.coryptex.com/lib/sago/sagolog"
 	"git.coryptex.com/lib/sago/sagomsg"
 	"github.com/pkg/errors"
 )
@@ -35,18 +36,21 @@ func (d *CommandDispatcher) Initialize() {
 
 func (d *CommandDispatcher) handleMessage(msg sagomsg.Message) error {
 	const op string = "sagocmd.command_dispatcher.handleMessage"
-	log.Printf("%s: received message %s %v\n", op, d.cmdDispatcherID, msg)
+
+	sagolog.Log(sagolog.DEBUG,
+		fmt.Sprintf("%s: message received %s %v", op, d.cmdDispatcherID, msg),
+	)
 
 	cmdHandler := d.cmdHandlers.FindTargetMethod(msg)
 	if cmdHandler == nil {
-		return errors.Errorf("%s: no method for %v", op, msg)
+		return errors.Errorf("%s: no handler for %+v", op, msg)
 	}
 
 	cmdHandlerParams := NewCommandHandlerParams(msg)
 
 	msgid, err := msg.ID()
 	if err != nil {
-		return errors.Wrapf(err, "%s: message doesn't have ID, msg: %v", op, msg)
+		return errors.Wrapf(err, "%s: message doesn't have ID, msg: %+v", op, msg)
 	}
 
 	cmdmsg := NewCommandMessage(

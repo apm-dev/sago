@@ -2,8 +2,8 @@ package sago
 
 import (
 	"fmt"
-	"log"
 
+	"git.coryptex.com/lib/sago/sagolog"
 	"github.com/pkg/errors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -71,6 +71,8 @@ func NewSagaInstanceRepositoryPostgreImpl(conf PostgreConfig) SagaInstanceReposi
 }
 
 func (r *SagaInstanceRepositoryPostgreImpl) Save(si SagaInstance) (string, error) {
+	const op string = "sago.instance_repository_postgre.Save"
+
 	data := sagaInstancePgSchema{
 		SagaID:        si.ID(),
 		SagaType:      si.SagaType(),
@@ -90,13 +92,19 @@ func (r *SagaInstanceRepositoryPostgreImpl) Save(si SagaInstance) (string, error
 		)
 	}
 
-	log.Printf("SagaInstance %s:%s was saved\n", si.SagaType(), data.SagaID)
+	sagolog.Log(sagolog.DEBUG,
+		fmt.Sprintf("%s: SagaInstance %s:%s was saved\n", op, si.SagaType(), data.SagaID),
+	)
 
 	return data.SagaID, nil
 }
 
 func (r *SagaInstanceRepositoryPostgreImpl) Find(sagaType, sagaID string) (*SagaInstance, error) {
-	log.Printf("finding SagaInstance %s:%s", sagaType, sagaID)
+	const op string = "sago.instance_repository_postgre.Save"
+
+	sagolog.Log(sagolog.DEBUG,
+		fmt.Sprintf("%s: finding SagaInstance %s:%s", op, sagaType, sagaID),
+	)
 
 	var data sagaInstancePgSchema
 	result := r.db.Where("saga_id = ? AND saga_type = ?", sagaID, sagaType).First(&data)
@@ -104,8 +112,8 @@ func (r *SagaInstanceRepositoryPostgreImpl) Find(sagaType, sagaID string) (*Saga
 	if result.Error != nil {
 		return nil, errors.Wrapf(
 			result.Error,
-			"Couldn't find SagaInstance %s:%s\n",
-			sagaType, sagaID,
+			"%s: failed to find SagaInstance %s:%s",
+			op, sagaType, sagaID,
 		)
 	}
 

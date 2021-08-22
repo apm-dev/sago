@@ -54,15 +54,15 @@ type sagaManager struct {
 func (sm *sagaManager) create(uniqueId string, data SagaData, vars map[string]interface{}) error {
 	const op string = "sago.manager.create"
 
-	sagolog.Log(sagolog.INFO, fmt.Sprintf(
-		"%s: creating %s:%s saga",
-		op, sm.getSagaType(), uniqueId,
-	))
-
 	dataSerd, err := data.Marshal()
 	if err != nil {
-		return errors.Wrapf(err, "%s: %s\n%+v", op, uniqueId, data)
+		return errors.Wrapf(err, "%s: %s:%s\n%+v", op, sm.getSagaType(), uniqueId, data)
 	}
+
+	sagolog.Log(sagolog.DEBUG, fmt.Sprintf(
+		"%s: creating %s:%s saga with data: %s",
+		op, sm.getSagaType(), uniqueId, string(dataSerd),
+	))
 
 	sagaInstance := NewSagaInstance(
 		uniqueId, sm.getSagaType(), "started", "",
@@ -199,7 +199,7 @@ func (sm *sagaManager) handleJob(client worker.JobClient, job entities.Job) {
 	cmd, err := step.Command(instance.SerializedSagaData(), vars)
 	if err != nil {
 		msg := fmt.Sprintf("%s: failed to get step's command\n%v", op, err)
-		
+
 		sagolog.Log(sagolog.ERROR, msg)
 		zeebe.FailJob(client, job, msg)
 		return

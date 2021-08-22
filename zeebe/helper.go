@@ -2,9 +2,10 @@ package zeebe
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"time"
 
+	"git.coryptex.com/lib/sago/sagolog"
 	"github.com/camunda-cloud/zeebe/clients/go/pkg/entities"
 	"github.com/camunda-cloud/zeebe/clients/go/pkg/pb"
 	"github.com/camunda-cloud/zeebe/clients/go/pkg/worker"
@@ -29,9 +30,11 @@ func ListBrokers(client zbc.Client) {
 	panicOnErr(err)
 
 	for _, broker := range topology.Brokers {
-		log.Println("Broker", broker.Host, ":", broker.Port)
+		sagolog.Log(sagolog.INFO,
+			fmt.Sprintf("ZB Broker %s:%d", broker.Host, broker.Port))
 		for _, partition := range broker.Partitions {
-			log.Println("Partition", partition.PartitionId, ":", roleToString(partition.Role))
+			sagolog.Log(sagolog.INFO,
+				fmt.Sprintf("ZB Partition %d:%s", partition.PartitionId, roleToString(partition.Role)))
 		}
 	}
 }
@@ -48,30 +51,28 @@ func StartJobWorker(client zbc.Client, jobType string, handler worker.JobHandler
 func DeployProcess(client zbc.Client, path string) error {
 	// After the client is created
 	ctx := context.Background()
-	response, err := client.NewDeployProcessCommand().AddResourceFile(path).Send(ctx)
+	_, err := client.NewDeployProcessCommand().AddResourceFile(path).Send(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateProcessInstance(client zbc.Client, pid string, variables map[string]interface{}) error {
+	request, err := client.NewCreateInstanceCommand().
+		BPMNProcessId(pid).
+		LatestVersion().
+		VariablesFromMap(variables)
+
 	if err != nil {
 		return err
 	}
 
-	log.Println(response.String())
+	_, err = request.Send(context.Background())
+	if err != nil {
+		return err
+	}
 	return nil
-}
-
-func CreateProcessInstance(client zbc.Client, pid string, variables map[string]interface{}) {
-	request, err :=
-		client.NewCreateInstanceCommand().
-			BPMNProcessId(pid).
-			LatestVersion().
-			VariablesFromMap(variables)
-
-	panicOnErr(err)
-
-	ctx := context.Background()
-
-	msg, err := request.Send(ctx)
-	panicOnErr(err)
-
-	log.Println(msg.String())
 }
 
 func FailJob(client worker.JobClient, job entities.Job, msg string) error {
@@ -102,7 +103,6 @@ func PublishMessage(ctx context.Context, client zbc.Client, msgName, correlation
 			"failed to send zb %s:%s PublishMessageCommand\nerr: %v",
 			msgName, correlationId, err)
 	}
-	log.Printf("zb message %s:%s published\nvariables: %v\n", msgName, correlationId, vars)
 	return nil
 }
 
